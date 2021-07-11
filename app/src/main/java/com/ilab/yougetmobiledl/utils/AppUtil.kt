@@ -1,5 +1,6 @@
 package com.ilab.yougetmobiledl.utils
 
+import android.os.Environment
 import android.provider.Settings
 import dev.utils.app.ResourceUtils.getContentResolver
 import java.util.regex.Pattern
@@ -21,5 +22,13 @@ object AppUtil {
             return matchers.group(0) === str
         }
         return false
+    }
+
+    fun getSDCardPath(): String? {
+        val sdCardExist = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
+        if (sdCardExist) {
+            return Environment.getExternalStorageDirectory().absolutePath
+        }
+        return null
     }
 }

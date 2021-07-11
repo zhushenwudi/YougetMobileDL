@@ -1,12 +1,12 @@
 package com.ilab.yougetmobiledl.viewmodel
 
-import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chaquo.python.Python
 import com.ilab.yougetmobiledl.model.DownloadInfo
+import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.app.ShellUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -27,10 +27,10 @@ class MainViewModel : ViewModel() {
 
     fun download(url: String) {
         downloadStatus.value = Status.DOWNLOAD
-        checkSDCard()?.let {
+        AppUtil.getSDCardPath()?.let {
             viewModelScope.launch(Dispatchers.Default) {
                 while (downloadStatus.value == Status.DOWNLOAD) {
-                    delay(2000)
+                    delay(500)
                     try {
                         ShellUtils.execCmd(CLEAR_LOG, false)
                         val result = ShellUtils.execCmd(PRINT_LOG, false)
@@ -39,10 +39,10 @@ class MainViewModel : ViewModel() {
                                 .substringAfterLast("\n")
                                 .substringAfterLast(TAG)
                                 .trim()
-                            if (!res.contains(SPLIT_STR)) {
-                                val percent = res.substringBefore(' ')
-                                val totalSize = res.substringAfter('/').substringBefore(')')
-                                val speed = res.substringAfterLast("  ")
+                            if (!res.contains(SPLIT_STR1) && !res.contains(SPLIT_STR2)) {
+                                val percent = res.substringBefore(' ').trim()
+                                val totalSize = res.substringAfter('/').substringBefore(')').trim()
+                                val speed = res.substringAfterLast("]").trim()
                                 withContext(Dispatchers.Main) {
                                     if (totalSize.isNullOrEmpty() || percent.isNullOrEmpty() || speed.isNullOrEmpty()) {
                                         downloadInfo.value = null
@@ -79,18 +79,11 @@ class MainViewModel : ViewModel() {
         } ?: (false.also { downloadStatus.value = Status.SDCARD_NOT_FOUND })
     }
 
-    private fun checkSDCard(): String? {
-        val sdCardExist = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)
-        if (sdCardExist) {
-            return Environment.getExternalStorageDirectory().absolutePath
-        }
-        return null
-    }
-
     companion object {
         const val CLEAR_LOG = "logcat -c"
         const val PRINT_LOG = "logcat -d -s python.stdout"
         const val TAG = "python.stdout:"
-        const val SPLIT_STR = "main"
+        const val SPLIT_STR1 = "main"
+        const val SPLIT_STR2 = "begin"
     }
 }

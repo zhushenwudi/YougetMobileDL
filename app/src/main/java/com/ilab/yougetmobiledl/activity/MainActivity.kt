@@ -19,6 +19,10 @@ import com.ilab.yougetmobiledl.utils.AppUtil
 import com.ilab.yougetmobiledl.utils.clickNoRepeat
 import com.ilab.yougetmobiledl.utils.showToast
 import com.ilab.yougetmobiledl.viewmodel.MainViewModel
+import com.squareup.picasso.Picasso
+import com.youth.banner.Banner
+import com.youth.banner.adapter.BannerImageAdapter
+import com.youth.banner.holder.BannerImageHolder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -52,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                     else -> {
                     }
                 }
+                tvInfo.setBackgroundColor(resources.getColor(R.color.transparent))
             }
         }
 
@@ -64,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                     下载速度: ${it.speed}
                 """.trimIndent()
             } ?: if (mViewModel?.downloadStatus?.value == MainViewModel.Status.DOWNLOAD) {
-                tvInfo.text = "准备开始下载..."
+                tvInfo.text = "下载中..."
             } else {
                 tvInfo.text = ""
             }
@@ -85,6 +90,7 @@ class MainActivity : AppCompatActivity() {
                                     } else {
                                         mViewModel?.download("https://www.bilibili.com/video/BV1sM4y1M7qR")
                                     }
+                                    tvInfo.setBackgroundColor(resources.getColor(R.color.tianyi))
                                 }
                             } else {
                                 showToast("有任务正在下载中，请稍候...")
@@ -117,6 +123,25 @@ class MainActivity : AppCompatActivity() {
         if (!AppUtil.isADBEnable()) {
             showToast("检测到您未打开USB调试模式将无法显示下载状态")
         }
+
+        (banner as Banner<Int, BannerImageAdapter<Int>>).setAdapter(object :
+            BannerImageAdapter<Int>(
+                arrayListOf(
+                    R.drawable.banner_1,
+                    R.drawable.banner_2,
+                    R.drawable.banner_3,
+                )
+            ) {
+            override fun onBindView(
+                holder: BannerImageHolder,
+                image: Int,
+                position: Int,
+                size: Int
+            ) {
+                Picasso.get().load(image).into(holder.imageView)
+            }
+        })
+            .addBannerLifecycleObserver(this)
     }
 
     private fun openDevSetting() {

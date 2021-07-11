@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'com.chaquo.python'
     id 'kotlin-android-extensions'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -63,4 +64,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.0"
     implementation 'io.github.afkt:DevAppX:2.2.8'
     implementation 'com.ftd.livepermissions:livepermissions:1.0.2'
+    implementation 'io.github.youth5201314:banner:2.2.2'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }
