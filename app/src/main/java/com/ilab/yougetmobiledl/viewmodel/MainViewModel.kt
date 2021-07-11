@@ -18,7 +18,8 @@ class MainViewModel : ViewModel() {
         DOWNLOAD,
         IDLE,
         SUCCESS,
-        FAIL
+        SDCARD_NOT_FOUND,
+        URL_ERROR
     }
 
     val downloadStatus = MutableLiveData(Status.IDLE)
@@ -65,12 +66,17 @@ class MainViewModel : ViewModel() {
 
             viewModelScope.launch(Dispatchers.Default) {
                 val py = Python.getInstance()
-                py.getModule("test").callAttr("download", url, it)
+                val result = py.getModule("download").callAttr("download", url, it).toString()
+                val status = if (result == "finish") {
+                    Status.SUCCESS
+                } else {
+                    Status.URL_ERROR
+                }
                 withContext(Dispatchers.Main) {
-                    downloadStatus.value = Status.SUCCESS
+                    downloadStatus.value = status
                 }
             }
-        } ?: (false.also { downloadStatus.value = Status.FAIL })
+        } ?: (false.also { downloadStatus.value = Status.SDCARD_NOT_FOUND })
     }
 
     private fun checkSDCard(): String? {

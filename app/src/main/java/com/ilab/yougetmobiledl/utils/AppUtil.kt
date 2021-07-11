@@ -2,6 +2,7 @@ package com.ilab.yougetmobiledl.utils
 
 import android.provider.Settings
 import dev.utils.app.ResourceUtils.getContentResolver
+import java.util.regex.Pattern
 
 object AppUtil {
     // 判断adb调试模式是否打开
@@ -11,5 +12,14 @@ object AppUtil {
             Settings.Secure.ADB_ENABLED,
             0
         ) > 0
+    }
+
+    fun isUrl(str: String): Boolean {
+        val pattern = "(https?|http)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
+        val matchers = Pattern.compile(pattern).matcher(str)
+        if (matchers.find()) {
+            return matchers.group(0) === str
+        }
+        return false
     }
 }
