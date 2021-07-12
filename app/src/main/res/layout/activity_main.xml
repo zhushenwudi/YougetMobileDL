@@ -23,10 +23,9 @@
             android:gravity="top"
             android:hint="请输入要下载的视频地址"
             android:minLines="5"
-            android:padding="5dp"
+            android:padding="10dp"
             android:textColor="@color/black"
             android:textSize="14sp"
-
             app:layout_constraintBottom_toTopOf="@+id/guideline4"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

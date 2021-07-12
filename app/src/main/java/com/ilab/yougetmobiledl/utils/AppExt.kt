@@ -1,5 +1,9 @@
 package com.ilab.yougetmobiledl.utils
 
+import android.app.Activity
+import android.content.ComponentName
+import android.content.Intent
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -39,5 +43,30 @@ private fun isFastDoubleClick(v: View, intervalMillis: Long, withOthers: Boolean
         mLastClickTime = time
         mLastClickViewId = viewId
         false
+    }
+}
+
+fun Activity.openDevSetting() {
+    try {
+        val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+        startActivity(intent)
+    } catch (e: Exception) {
+        try {
+            val componentName = ComponentName(
+                "com.android.settings",
+                "com.android.settings.DevelopmentSettings"
+            )
+            val intent = Intent()
+            intent.component = componentName
+            intent.action = "android.intent.action.View"
+            startActivity(intent)
+        } catch (e1: Exception) {
+            try {
+                // 部分小米手机采用这种方式跳转
+                val intent = Intent("com.android.settings.APPLICATION_DEVELOPMENT_SETTINGS")
+                startActivity(intent)
+            } catch (e2: Exception) {
+            }
+        }
     }
 }

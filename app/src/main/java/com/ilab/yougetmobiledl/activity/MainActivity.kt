@@ -2,7 +2,6 @@ package com.ilab.yougetmobiledl.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -15,14 +14,10 @@ import com.ftd.livepermissions.LivePermissions
 import com.ftd.livepermissions.PermissionResult
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.databinding.ActivityMainBinding
-import com.ilab.yougetmobiledl.utils.AppUtil
-import com.ilab.yougetmobiledl.utils.clickNoRepeat
-import com.ilab.yougetmobiledl.utils.showToast
+import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.MainViewModel
-import com.squareup.picasso.Picasso
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
-import com.youth.banner.holder.BannerImageHolder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,6 +32,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         mViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+
+        (banner as Banner<Int, BannerImageAdapter<Int>>).init(
+            arrayListOf(
+                R.drawable.banner_1,
+                R.drawable.banner_2,
+                R.drawable.banner_3,
+            )
+        )
 
         mViewModel?.downloadStatus?.observe(this) {
             it?.let {
@@ -84,11 +87,16 @@ class MainActivity : AppCompatActivity() {
                         is PermissionResult.Grant -> {
                             if (mViewModel?.downloadStatus?.value == MainViewModel.Status.IDLE) {
                                 etUrl.text.toString().trim().let { et ->
-                                    showToast("开始下载")
-                                    if (et != "" && AppUtil.isUrl(et)) {
-                                        mViewModel?.download(et)
-                                    } else {
+                                    if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
+                                        showToast("请输入正确的url格式")
+                                        return@observe
+                                    }
+                                    if (et.isEmpty()) {
+                                        showToast("开始下载默认视频")
                                         mViewModel?.download("https://www.bilibili.com/video/BV1sM4y1M7qR")
+                                    } else if (AppUtil.isUrl(et)) {
+                                        showToast("开始下载")
+                                        mViewModel?.download(et)
                                     }
                                     tvInfo.setBackgroundColor(resources.getColor(R.color.tianyi))
                                 }
@@ -122,50 +130,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (!AppUtil.isADBEnable()) {
             showToast("检测到您未打开USB调试模式将无法显示下载状态")
-        }
-
-        (banner as Banner<Int, BannerImageAdapter<Int>>).setAdapter(object :
-            BannerImageAdapter<Int>(
-                arrayListOf(
-                    R.drawable.banner_1,
-                    R.drawable.banner_2,
-                    R.drawable.banner_3,
-                )
-            ) {
-            override fun onBindView(
-                holder: BannerImageHolder,
-                image: Int,
-                position: Int,
-                size: Int
-            ) {
-                Picasso.get().load(image).into(holder.imageView)
-            }
-        })
-            .addBannerLifecycleObserver(this)
-    }
-
-    private fun openDevSetting() {
-        try {
-            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-            startActivity(intent)
-        } catch (e: Exception) {
-            try {
-                val componentName = ComponentName(
-                    "com.android.settings",
-                    "com.android.settings.DevelopmentSettings"
-                )
-                val intent = Intent()
-                intent.component = componentName
-                intent.action = "android.intent.action.View"
-                startActivity(intent)
-            } catch (e1: Exception) {
-                try {
-                    // 部分小米手机采用这种方式跳转
-                    val intent = Intent("com.android.settings.APPLICATION_DEVELOPMENT_SETTINGS")
-                    startActivity(intent)
-                } catch (e2: Exception) {
-                }
-            }
         }
     }
 }

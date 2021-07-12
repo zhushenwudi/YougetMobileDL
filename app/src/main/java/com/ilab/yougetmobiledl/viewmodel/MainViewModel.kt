@@ -44,9 +44,7 @@ class MainViewModel : ViewModel() {
                                 val totalSize = res.substringAfter('/').substringBefore(')').trim()
                                 val speed = res.substringAfterLast("]").trim()
                                 withContext(Dispatchers.Main) {
-                                    if (totalSize.isNullOrEmpty() || percent.isNullOrEmpty() || speed.isNullOrEmpty()) {
-                                        downloadInfo.value = null
-                                    } else {
+                                    if (totalSize.isNotEmpty() && percent.isNotEmpty() && speed.isNotEmpty()) {
                                         downloadInfo.value =
                                             DownloadInfo(url, totalSize, percent, speed)
                                     }

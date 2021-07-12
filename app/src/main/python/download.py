@@ -9,10 +9,8 @@ sys.stdout = so
 
 
 def download(url, path):
-    # try:
-    #     you_get.any_download(url, info_only=False, output_dir=os.path.abspath(path), merge=True)
-    #     return "finish"
-    # except:
-    #     return "error"
-    you_get.any_download(url, info_only=False, output_dir=os.path.abspath(path), merge=True)
-    return "finish"
+    try:
+        you_get.any_download(url, info_only=False, output_dir=os.path.abspath(path), merge=True)
+        return "finish"
+    except:
+        return "error"
