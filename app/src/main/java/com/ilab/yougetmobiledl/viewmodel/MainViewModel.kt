@@ -30,9 +30,9 @@ class MainViewModel : ViewModel() {
         AppUtil.getSDCardPath()?.let {
             viewModelScope.launch(Dispatchers.Default) {
                 while (downloadStatus.value == Status.DOWNLOAD) {
-                    delay(500)
                     try {
                         ShellUtils.execCmd(CLEAR_LOG, false)
+                        delay(500)
                         val result = ShellUtils.execCmd(PRINT_LOG, false)
                         if (result.isSuccess) {
                             val res = result.successMsg

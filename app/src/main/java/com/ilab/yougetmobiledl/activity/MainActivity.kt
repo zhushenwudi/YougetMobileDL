@@ -120,16 +120,5 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
         }
-
-        btnDev.clickNoRepeat {
-            openDevSetting()
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!AppUtil.isADBEnable()) {
-            showToast("检测到您未打开USB调试模式将无法显示下载状态")
-        }
     }
 }
