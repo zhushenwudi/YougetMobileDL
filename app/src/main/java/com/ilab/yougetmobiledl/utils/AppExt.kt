@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import kotlin.math.abs
 
 // 最近一次点击的时间
@@ -17,6 +18,10 @@ private var mLastClickViewId = 0
 
 fun AppCompatActivity.showToast(msg: String, time: Int = Toast.LENGTH_LONG) {
     Toast.makeText(this, msg, time).show()
+}
+
+fun Fragment.showToast(msg: String, time: Int = Toast.LENGTH_LONG) {
+    Toast.makeText(requireContext(), msg, time).show()
 }
 
 fun View.clickNoRepeat(

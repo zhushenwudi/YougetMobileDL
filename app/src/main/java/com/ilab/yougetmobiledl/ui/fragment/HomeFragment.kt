@@ -1,4 +1,4 @@
-package com.ilab.yougetmobiledl.activity
+package com.ilab.yougetmobiledl.ui.fragment
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -6,32 +6,41 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.ftd.livepermissions.LivePermissions
 import com.ftd.livepermissions.PermissionResult
 import com.ilab.yougetmobiledl.R
-import com.ilab.yougetmobiledl.databinding.ActivityMainBinding
-import com.ilab.yougetmobiledl.utils.*
-import com.ilab.yougetmobiledl.viewmodel.MainViewModel
+import com.ilab.yougetmobiledl.utils.AppUtil
+import com.ilab.yougetmobiledl.utils.clickNoRepeat
+import com.ilab.yougetmobiledl.utils.init
+import com.ilab.yougetmobiledl.utils.showToast
+import com.ilab.yougetmobiledl.viewmodel.HomeViewModel
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.home_fragment.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @SuppressLint("SetTextI18n")
-class MainActivity : AppCompatActivity() {
-    private var mBinding: ActivityMainBinding? = null
-    private var mViewModel: MainViewModel? = null
+class HomeFragment : Fragment() {
+    private lateinit var viewModel: HomeViewModel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        mViewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.home_fragment, container, false)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        viewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
         (banner as Banner<Int, BannerImageAdapter<Int>>).init(
             arrayListOf(
@@ -41,20 +50,20 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        mViewModel?.downloadStatus?.observe(this) {
+        viewModel.downloadStatus.observe(viewLifecycleOwner) {
             it?.let {
                 when (it) {
-                    MainViewModel.Status.SUCCESS -> {
+                    HomeViewModel.Status.SUCCESS -> {
                         showToast("下载完成")
-                        mViewModel?.downloadStatus?.value = MainViewModel.Status.IDLE
+                        viewModel.downloadStatus.value = HomeViewModel.Status.IDLE
                     }
-                    MainViewModel.Status.URL_ERROR -> {
+                    HomeViewModel.Status.URL_ERROR -> {
                         showToast("URL不可用")
-                        mViewModel?.downloadStatus?.value = MainViewModel.Status.IDLE
+                        viewModel.downloadStatus.value = HomeViewModel.Status.IDLE
                     }
-                    MainViewModel.Status.SDCARD_NOT_FOUND -> {
+                    HomeViewModel.Status.SDCARD_NOT_FOUND -> {
                         showToast("未找到内部存储，无法下载")
-                        mViewModel?.downloadStatus?.value = MainViewModel.Status.IDLE
+                        viewModel.downloadStatus.value = HomeViewModel.Status.IDLE
                     }
                     else -> {
                     }
@@ -63,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        mViewModel?.downloadInfo?.observe(this) {
+        viewModel.downloadInfo.observe(viewLifecycleOwner) {
             it?.let {
                 tvInfo.text = """
                     地址: ${it.url}
@@ -71,7 +80,7 @@ class MainActivity : AppCompatActivity() {
                     下载进度: ${it.percent}
                     下载速度: ${it.speed}
                 """.trimIndent()
-            } ?: if (mViewModel?.downloadStatus?.value == MainViewModel.Status.DOWNLOAD) {
+            } ?: if (viewModel.downloadStatus.value == HomeViewModel.Status.DOWNLOAD) {
                 tvInfo.text = "下载中..."
             } else {
                 tvInfo.text = ""
@@ -82,10 +91,10 @@ class MainActivity : AppCompatActivity() {
             LivePermissions(this)
                 .request(
                     Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ).observe(this) {
+                ).observe(viewLifecycleOwner) {
                     when (it) {
                         is PermissionResult.Grant -> {
-                            if (mViewModel?.downloadStatus?.value == MainViewModel.Status.IDLE) {
+                            if (viewModel.downloadStatus.value == HomeViewModel.Status.IDLE) {
                                 etUrl.text.toString().trim().let { et ->
                                     if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
                                         showToast("请输入正确的url格式")
@@ -93,10 +102,10 @@ class MainActivity : AppCompatActivity() {
                                     }
                                     if (et.isEmpty()) {
                                         showToast("开始下载默认视频")
-                                        mViewModel?.download("https://www.bilibili.com/video/BV1sM4y1M7qR")
+                                        viewModel.download("https://www.bilibili.com/video/BV1sM4y1M7qR")
                                     } else if (AppUtil.isUrl(et)) {
                                         showToast("开始下载")
-                                        mViewModel?.download(et)
+                                        viewModel.download(et)
                                     }
                                     tvInfo.setBackgroundColor(resources.getColor(R.color.tianyi))
                                 }
@@ -112,7 +121,8 @@ class MainActivity : AppCompatActivity() {
                             lifecycleScope.launch(Dispatchers.Main) {
                                 delay(3000)
                                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                val uri = Uri.fromParts("package", packageName, null)
+                                val uri =
+                                    Uri.fromParts("package", requireActivity().packageName, null)
                                 intent.data = uri
                                 startActivity(intent)
                             }
@@ -121,4 +131,5 @@ class MainActivity : AppCompatActivity() {
                 }
         }
     }
+
 }
