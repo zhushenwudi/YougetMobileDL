@@ -1,0 +1,102 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:7013250790889530212",
+      "lastPropertyId": "8:1594019235366762880",
+      "name": "DownloadInfo",
+      "properties": [
+        {
+          "id": "1:1513878888005028760",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5629388373143131516",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:5356753865263555900",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "4:6043484729606313774",
+          "name": "totalSize",
+          "type": 9
+        },
+        {
+          "id": "5:5533379743718003178",
+          "name": "percent",
+          "type": 9
+        },
+        {
+          "id": "6:6784268736411160995",
+          "name": "speed",
+          "type": 9
+        },
+        {
+          "id": "7:1910362920621751439",
+          "name": "status",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "8:1594019235366762880",
+          "name": "url",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:61474954672725524",
+      "lastPropertyId": "5:6652523175207221903",
+      "name": "VideoInfo",
+      "properties": [
+        {
+          "id": "1:8083024900892344102",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7022686473523025112",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:6160566263498724456",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "4:6549333089017172007",
+          "name": "totalSize",
+          "type": 9
+        },
+        {
+          "id": "5:6652523175207221903",
+          "name": "photo",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "2:61474954672725524",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

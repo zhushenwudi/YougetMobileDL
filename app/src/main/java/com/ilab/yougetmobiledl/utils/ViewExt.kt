@@ -1,6 +1,7 @@
 package com.ilab.yougetmobiledl.utils
 
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
@@ -13,4 +14,17 @@ fun Banner<Int, BannerImageAdapter<Int>>.init(mutableList: List<Int>) {
             Picasso.get().load(image).into(holder.imageView)
         }
     }).addBannerLifecycleObserver(this.findViewTreeLifecycleOwner())
+}
+
+// 绑定普通的Recyclerview
+fun RecyclerView.init(
+    layoutManger: RecyclerView.LayoutManager,
+    bindAdapter: RecyclerView.Adapter<*>,
+    isScroll: Boolean = true
+): RecyclerView {
+    layoutManager = layoutManger
+    setHasFixedSize(true)
+    adapter = bindAdapter
+    isNestedScrollingEnabled = isScroll
+    return this
 }

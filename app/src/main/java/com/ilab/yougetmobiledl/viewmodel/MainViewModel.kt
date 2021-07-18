@@ -5,7 +5,6 @@ import android.view.ViewGroup.MarginLayoutParams
 import androidx.databinding.BindingAdapter
 import androidx.lifecycle.ViewModel
 
-
 class MainViewModel : ViewModel()
 
 @BindingAdapter("android:layout_marginTop")
