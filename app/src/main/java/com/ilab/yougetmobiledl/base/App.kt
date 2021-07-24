@@ -3,6 +3,8 @@ package com.ilab.yougetmobiledl.base
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.Volley
 import com.chaquo.python.android.PyApplication
 import com.heima.easysp.SharedPreferencesUtils
 import com.ilab.yougetmobiledl.model.MyObjectBox
@@ -20,6 +22,7 @@ class App : PyApplication(), ViewModelStoreOwner {
         lateinit var boxStore: BoxStore
         lateinit var eventVM: MyEventVM
         lateinit var sp: SharedPreferencesUtils
+        lateinit var volley: RequestQueue
         var isInitDB = true
     }
 
@@ -27,12 +30,14 @@ class App : PyApplication(), ViewModelStoreOwner {
         super.onCreate()
         mAppViewModelStore = ViewModelStore()
         sp = SharedPreferencesUtils.init(this)
+        volley = Volley.newRequestQueue(this)
         // 打开 lib 内部日志 - 线上 (release) 环境，不调用方法
         DevUtils.openLog()
         // 标示 debug 模式
         DevUtils.openDebug()
         eventVM = getAppViewModelProvider().get(MyEventVM::class.java)
         boxStore = MyObjectBox.builder().androidContext(this).build()
+        boxStore.startObjectBrowser(8090)
     }
 
     private fun getAppViewModelProvider(): ViewModelProvider {

@@ -1,145 +1,134 @@
 package com.ilab.yougetmobiledl.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.volley.Request
+import com.android.volley.toolbox.JsonObjectRequest
 import com.chaquo.python.Python
-import com.ilab.yougetmobiledl.base.App
-import com.ilab.yougetmobiledl.model.DownloadInfo
-import com.ilab.yougetmobiledl.model.DownloadInfo_
+import com.ilab.yougetmobiledl.base.App.Companion.volley
+import com.ilab.yougetmobiledl.base.eventVM
+import com.ilab.yougetmobiledl.model.*
 import com.ilab.yougetmobiledl.utils.AppUtil
-import dev.utils.app.ShellUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+
 
 class HomeViewModel : ViewModel() {
-    private val downloadBox = App.boxStore.boxFor(DownloadInfo::class.java)
-
     enum class Status {
-        DOWNLOAD,
-        IDLE,
-        SUCCESS,
-        SDCARD_NOT_FOUND,
-        URL_ERROR
+        FIND_VIDEO_INFO,
+        FIND_VIDEO_ERROR,
+        PARSE_VIDEO_INFO,
+        PARSE_VIDEO_ERROR,
+        MATCH_ERROR,
+        TIMEOUT_ERROR,
+        READY_FOR_DOWNLOAD,
+        ALREADY_DOWNLOAD,
+        CLOSE_DIALOG
     }
 
-    val downloadStatus = MutableLiveData(Status.IDLE)
-    val downloadInfo = MutableLiveData<DownloadInfo?>()
+    val downloadStatus = MutableLiveData(Status.CLOSE_DIALOG)
+    val downloadInfo = MutableLiveData<DownloadInfo>()
 
     fun getVideoList(url: String) {
-        viewModelScope.launch(Dispatchers.Default) {
-            val py = Python.getInstance()
-            ShellUtils.execCmd(CLEAR_LOG, false)
-            val result = py.getModule("download").callAttr("getInfo", url).toString()
-            if (result == "finish") {
-                val log = ShellUtils.execCmd(PRINT_LOG, false)
-                if (log.isSuccess) {
-                    val res = log.successMsg
-                    val title = res.substringAfter(TITLE).substringBefore("\n").trim()
-                    var size = ""
-                    var format = ""
-                    res.substringAfter("[ DEFAULT ]")
-                        .substringBefore("[URL]")
-                        .split("\n")
-                        .forEach {
-                            if (!it.endsWith(TAG) && !it.contains(DEFAULT_LINE)) {
-                                val line = it.substringAfter(TAG).trim()
-                                if (line.contains(SIZE)) {
-                                    size = line.substringAfter(SIZE).substringBefore(" (").trim()
-                                }
-                                if (line.contains(FORMAT)) {
-                                    format = line.substringAfterLast(FORMAT).trim()
-                                }
-                            }
+        viewModelScope.launch(Dispatchers.IO) {
+            // 判断内存中已下载和下载中是否包括该 url
+            if (eventVM.mutableDownloadedTasks.value?.any { it.url == url } == true) {
+                downloadStatus.postValue(Status.ALREADY_DOWNLOAD)
+                closeDialog()
+                return@launch
+            }
+            if (eventVM.mutableDownloadTasks.value?.any { it.url == url } == true) {
+                downloadStatus.postValue(Status.ALREADY_DOWNLOAD)
+                closeDialog()
+                return@launch
+            }
+            // 没有继续走
+            try {
+                withTimeout(120000) {
+                    downloadStatus.postValue(Status.FIND_VIDEO_INFO)
+                    val py = Python.getInstance()
+                    val defaultInfo =
+                        py.getModule("default").callAttr("getDefaultDownloadInfo", url).toString()
+                    if (defaultInfo == "error") {
+                        downloadStatus.postValue(Status.FIND_VIDEO_ERROR)
+                        closeDialog()
+                        return@withTimeout
+                    }
+                    downloadStatus.postValue(Status.PARSE_VIDEO_INFO)
+                    val matchFormat = Regex(REGEX_FORMAT).findAll(defaultInfo)
+                    val matchSize = Regex(REGEX_SIZE).findAll(defaultInfo)
+                    if (matchFormat.any() && matchSize.any()) {
+                        delay(1000)
+                        val jsonInfo = py.getModule("getJson").callAttr("getJson", url).toString()
+                        if (jsonInfo == "error") {
+                            downloadStatus.postValue(Status.PARSE_VIDEO_ERROR)
+                            closeDialog()
+                            return@withTimeout
                         }
-                    val info =
-                        DownloadInfo(name = title, totalSize = size, format = format, url = url)
-                    val videoList =
-                        downloadBox.query().equal(DownloadInfo_.name, info.name).build().find()
-                    if (videoList.isEmpty()) {
-                        downloadBox.put(info)
-                        Log.e("aaa", "$title - $size - $format")
-                        downloadInfo.postValue(info)
+                        downloadStatus.postValue(Status.READY_FOR_DOWNLOAD)
+                        val json = AppUtil.fromJson<StreamInfo>(jsonInfo)
+                        json?.let {
+                            val info = DownloadInfo(
+                                name = replaceWindows(json.title),
+                                totalSize = parseSize(matchSize.first().value),
+                                format = matchFormat.first().value,
+                                url = json.url.substringBefore("?")
+                            )
+                            getCoverPic(info)
+                        }
+                        closeDialog()
                     } else {
-                        downloadInfo.postValue(info)
-                        Log.e("aaa", "已经在缓存列表了")
+                        downloadStatus.postValue(Status.MATCH_ERROR)
+                        closeDialog()
+                        return@withTimeout
                     }
                 }
+            } catch (e: TimeoutCancellationException) {
+                downloadStatus.postValue(Status.TIMEOUT_ERROR)
+                closeDialog()
             }
         }
     }
 
-    fun download(url: String) {
-//        downloadBox.put(DownloadInfo(url = url))
-
-        downloadStatus.value = Status.DOWNLOAD
-        AppUtil.getSDCardPath()?.let {
-            viewModelScope.launch(Dispatchers.Default) {
-                while (downloadStatus.value == Status.DOWNLOAD) {
-                    try {
-                        ShellUtils.execCmd(CLEAR_LOG, false)
-                        delay(500)
-                        val result = ShellUtils.execCmd(PRINT_LOG, false)
-                        if (result.isSuccess) {
-                            val res = result.successMsg
-                                .substringAfterLast("\n")
-                                .substringAfterLast(TAG)
-                                .trim()
-                            if (!res.contains(SPLIT_STR1) && !res.contains(SPLIT_STR2)) {
-                                val percent = res.substringBefore(' ').trim()
-                                val totalSize = res.substringAfter('/').substringBefore(')').trim()
-                                val speed = res.substringAfterLast("]").trim()
-                                withContext(Dispatchers.Main) {
-                                    if (totalSize.isNotEmpty() && percent.isNotEmpty() && speed.isNotEmpty()) {
-                                        downloadInfo.value =
-                                            DownloadInfo(
-                                                url = url,
-                                                totalSize = totalSize,
-                                                percent = percent,
-                                                speed = speed
-                                            )
-                                    }
-                                }
-                            }
-                        } else {
-                            Log.e("aaa", "failed")
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+    private fun getCoverPic(info: DownloadInfo) {
+        if ("BV" in info.url) {
+            val url = COVER_URL + info.url.substringAfter("BV")
+            val jsonObjectRequest = JsonObjectRequest(Request.Method.GET, url, null,
+                { response ->
+                    if (response.getInt("code") == 0) {
+                        val pic = response.getJSONObject("data").getString("pic")
+                        info.pic = pic
+                        downloadInfo.postValue(info)
                     }
                 }
-                withContext(Dispatchers.Main) {
-                    downloadInfo.value = null
-                }
+            ) {
+                downloadInfo.postValue(info)
             }
+            volley.add(jsonObjectRequest)
+        } else {
+            downloadInfo.postValue(info)
+        }
+    }
 
-            viewModelScope.launch(Dispatchers.Default) {
-                val py = Python.getInstance()
-                val result = py.getModule("download").callAttr("download", url, it).toString()
-                val status = if (result == "finish") {
-                    Status.SUCCESS
-                } else {
-                    Status.URL_ERROR
-                }
-                withContext(Dispatchers.Main) {
-                    downloadStatus.value = status
-                }
-            }
-        } ?: (false.also { downloadStatus.value = Status.SDCARD_NOT_FOUND })
+    private fun parseSize(value: String): String {
+        val mb = value.toDouble() / (1024 * 1024)
+        return "%.2f".format(mb) + " MB"
+    }
+
+    private suspend fun closeDialog() {
+        delay(2000)
+        downloadStatus.postValue(Status.CLOSE_DIALOG)
+    }
+
+    private fun replaceWindows(str: String): String {
+        return str.replace("\\", "-").replace("/", "-").replace(":", "-").replace("*", "-")
+            .replace("?", "-").replace("\"", "-").replace("<", "-").replace(">", "-")
+            .replace("|", "-")
     }
 
     companion object {
-        const val CLEAR_LOG = "logcat -c"
-        const val PRINT_LOG = "logcat -d -s python.stdout"
-        const val TAG = "python.stdout:  "
-        const val DEFAULT_LINE = "___________"
-        const val TITLE = "title:"
-        const val SIZE = "size:"
-        const val FORMAT = "format:"
-        const val SPLIT_STR1 = "main"
-        const val SPLIT_STR2 = "begin"
+        const val REGEX_FORMAT = "(?<=--format=)(.*?)(?= \\[URL])"
+        const val REGEX_SIZE = "(?<=MiB \\()(.*?)(?= bytes)"
+        const val COVER_URL = "https://api.bilibili.com/x/web-interface/view?bvid="
     }
 }

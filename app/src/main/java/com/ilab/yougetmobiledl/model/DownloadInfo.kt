@@ -17,9 +17,45 @@ data class DownloadInfo(
     var name: String = "",
     var path: String = "${AppUtil.getSDCardPath()}/$name.flv",
     var totalSize: String = "",
-    var percent: String = "",
+    var percent: Int = 0,
     var speed: String = "",
-    var status: Int = 0, // 0 未开始、1 等待中、2 下载中、3 下载失败、4 格式转换、5 下载完成
+    var status: Int = STATUS_NONE,
     var url: String = "",
-    var format: String = "flv"
-) : Parcelable
+    var format: String = "flv",
+    var pic: String? = null
+) : Parcelable, Comparable<DownloadInfo> {
+    override fun compareTo(other: DownloadInfo): Int {
+        return other.status - status
+    }
+
+    override fun toString(): String {
+        return "DownloadInfo(\n" +
+                "id=$id, \n" +
+                "name='$name', \n" +
+                "path='$path', \n" +
+                "totalSize='$totalSize', \n" +
+                "percent=$percent, \n" +
+                "speed='$speed', \n" +
+                "status=$status, \n" +
+                "url='$url', \n" +
+                "format='$format'\n" +
+                ")"
+    }
+
+    companion object {
+        // 未开始
+        const val STATUS_NONE = 0
+
+        // 等待中
+        const val STATUS_PREPARE_DOWNLOAD = 1
+
+        // 下载中
+        const val STATUS_DOWNLOADING = 2
+
+        // 格式转换中
+        const val STATUS_CONVERT = 3
+
+        // 下载失败
+        const val STATUS_ERROR = 4
+    }
+}

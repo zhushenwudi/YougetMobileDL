@@ -9,12 +9,22 @@ import com.ilab.yougetmobiledl.databinding.HomeFragmentBinding
 import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.HomeViewModel
+import com.ilab.yougetmobiledl.widget.MyProgress
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
 import kotlinx.android.synthetic.main.home_fragment.*
 
 @SuppressLint("SetTextI18n")
 class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
+
+    private val loading by lazy {
+        MyProgress.create(requireContext())
+            .setLabel("请稍候")
+            .setDetailsLabel("")
+            .setCancellable(true)
+            .setAnimationSpeed(2)
+            .setDimAmount(0.5f)
+    }
 
     override fun layoutId() = R.layout.home_fragment
 
@@ -32,70 +42,63 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
         mViewModel.downloadStatus.observe(viewLifecycleOwner) {
             it?.let {
                 when (it) {
-                    HomeViewModel.Status.SUCCESS -> {
-                        showToast("下载完成")
-                        mViewModel.downloadStatus.value = HomeViewModel.Status.IDLE
+                    HomeViewModel.Status.FIND_VIDEO_INFO -> {
+                        loading.refreshDetailLabel("寻找视频资源...")
                     }
-                    HomeViewModel.Status.URL_ERROR -> {
-                        showToast("URL不可用")
-                        mViewModel.downloadStatus.value = HomeViewModel.Status.IDLE
+                    HomeViewModel.Status.FIND_VIDEO_ERROR -> {
+                        loading.refreshDetailLabel("寻找视频资源...失败")
                     }
-                    HomeViewModel.Status.SDCARD_NOT_FOUND -> {
-                        showToast("未找到内部存储，无法下载")
-                        mViewModel.downloadStatus.value = HomeViewModel.Status.IDLE
+                    HomeViewModel.Status.PARSE_VIDEO_INFO -> {
+                        loading.refreshDetailLabel("解析视频资源...")
+                    }
+                    HomeViewModel.Status.PARSE_VIDEO_ERROR -> {
+                        loading.refreshDetailLabel("解析视频资源...失败")
+                    }
+                    HomeViewModel.Status.MATCH_ERROR -> {
+                        loading.refreshDetailLabel("未匹配到可用视频源")
+                    }
+                    HomeViewModel.Status.TIMEOUT_ERROR -> {
+                        loading.refreshDetailLabel("请求超时")
+                    }
+                    HomeViewModel.Status.READY_FOR_DOWNLOAD -> {
+                        loading.refreshDetailLabel("解析完毕，准备下载")
+                    }
+                    HomeViewModel.Status.ALREADY_DOWNLOAD -> {
+                        loading.refreshDetailLabel("文件已在队列或已完成")
                     }
                     else -> {
+                        loading.dismiss()
                     }
                 }
-                tvInfo.setBackgroundColor(resources.getColor(R.color.transparent))
             }
         }
 
         mViewModel.downloadInfo.observe(viewLifecycleOwner) {
-            it?.let {
-                showToast("即将下载: ${it.name}")
-                (requireActivity() as MainActivity).download(arrayListOf(it))
-            }
-//            it?.let {
-//                tvInfo.text = """
-//                    地址: ${it.url}
-//                    文件总大小: ${it.totalSize}
-//                    下载进度: ${it.percent}
-//                    下载速度: ${it.speed}
-//                """.trimIndent()
-//            } ?: if (mViewModel.downloadStatus.value == HomeViewModel.Status.DOWNLOAD) {
-//                tvInfo.text = "下载中..."
-//            } else {
-//                tvInfo.text = ""
-//            }
-        }
-
-        button.clickNoRepeat {
-            mViewModel.getVideoList("https://www.bilibili.com/video/BV1sM4y1M7qR")
+            (requireActivity() as MainActivity).add(it)
         }
 
         btnDownload.clickNoRepeat {
             requestPermission(
                 permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 onGrant = {
-                    if (mViewModel.downloadStatus.value == HomeViewModel.Status.IDLE) {
-                        etUrl.text.toString().trim().let { et ->
-                            if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
-                                showToast("请输入正确的url格式")
-                                return@requestPermission
-                            }
-                            if (et.isEmpty()) {
-                                showToast("开始下载默认视频")
-//                                mViewModel.getVideoList("https://www.bilibili.com/video/BV1sM4y1M7qR")
-                                mViewModel.getVideoList("https://www.bilibili.com/video/BV1nA411G7Ch?t=12")
-                            } else if (AppUtil.isUrl(et)) {
-                                showToast("开始下载")
-                                mViewModel.getVideoList(et)
-                            }
-                            tvInfo.setBackgroundColor(resources.getColor(R.color.tianyi))
+                    etUrl.text.toString().trim().let { et ->
+                        if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
+                            showToast("请输入正确的url格式")
+                            return@requestPermission
                         }
-                    } else {
-                        showToast("有任务正在下载中，请稍候...")
+                        if (et.isEmpty()) {
+                            mViewModel.getVideoList("https://www.bilibili.com/video/BV1GV411p7P9")
+                        } else {
+                            mViewModel.getVideoList(et)
+                        }
+                        loading.show()
+//                        val info = DownloadInfo(
+//                            name="【爱哥短】乌云乌云快走开~《别找我麻烦》翻唱",
+//                            totalSize = "4.50MB",
+//                            url = "https://www.bilibili.com/video/BV1GV411p7P9",
+//                            format = "flv"
+//                        )
+//                        (requireActivity() as MainActivity).add(info)
                     }
                 },
                 onRationale = {

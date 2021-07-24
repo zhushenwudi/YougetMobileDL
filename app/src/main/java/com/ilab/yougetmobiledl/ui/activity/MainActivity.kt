@@ -2,6 +2,7 @@ package com.ilab.yougetmobiledl.ui.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -52,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
 
-        startService(mIntent)
+        startService()
     }
 
     private fun initNavGraph(
@@ -84,26 +85,50 @@ class MainActivity : AppCompatActivity() {
         if (currentId != startId) {
             bottomNavigationView.selectedItemId = startId
         } else {
+            stopService(mIntent)
             exit()
         }
     }
 
-    fun download(info: ArrayList<DownloadInfo>) {
+    fun add(info: DownloadInfo) {
         mIntent.putExtra("msg", DownloadService.Event.ADD_ONE)
-        mIntent.putParcelableArrayListExtra("downloadList", info)
-        startService(mIntent)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
+    fun start(info: DownloadInfo) {
+        mIntent.putExtra("msg", DownloadService.Event.START_ONE)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
+    fun remove(info: DownloadInfo) {
+        mIntent.putExtra("msg", DownloadService.Event.REMOVE_ONE)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
+    fun pause(info: DownloadInfo) {
+        mIntent.putExtra("msg", DownloadService.Event.PAUSE_ONE)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
+    fun startAll() {
+        mIntent.putExtra("msg", DownloadService.Event.START_ALL)
+        startService()
     }
 
     fun pauseAll() {
         mIntent.putExtra("msg", DownloadService.Event.PAUSE_ALL)
-        startService(mIntent)
+        startService()
     }
 
-    override fun onStop() {
-        super.onStop()
-        try {
-            stopService(mIntent)
-        } catch (ignore: Exception) {
+    private fun startService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(mIntent)
+        } else {
+            startService(mIntent)
         }
     }
 }

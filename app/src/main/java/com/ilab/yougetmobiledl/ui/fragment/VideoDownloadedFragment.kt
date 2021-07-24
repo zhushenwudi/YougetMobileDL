@@ -6,35 +6,37 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.content.FileProvider
 import com.ilab.yougetmobiledl.R
-import com.ilab.yougetmobiledl.base.App
 import com.ilab.yougetmobiledl.base.BaseFragment
-import com.ilab.yougetmobiledl.databinding.VideoDownloadedFragmentBinding
+import com.ilab.yougetmobiledl.base.eventVM
+import com.ilab.yougetmobiledl.databinding.VideoDownloadFragmentBinding
 import com.ilab.yougetmobiledl.model.VideoInfo
 import com.ilab.yougetmobiledl.ui.adapter.VideoAdapter
 import com.ilab.yougetmobiledl.utils.init
 import com.ilab.yougetmobiledl.viewmodel.VideoDownloadedViewModel
 import com.ilab.yougetmobiledl.widget.MyDiyDecoration
 import com.ilab.yougetmobiledl.widget.MyLinearLayoutManager
-import kotlinx.android.synthetic.main.video_downloaded_fragment.*
+import kotlinx.android.synthetic.main.video_download_fragment.*
 import java.io.File
 
 class VideoDownloadedFragment :
-    BaseFragment<VideoDownloadedViewModel, VideoDownloadedFragmentBinding>() {
+    BaseFragment<VideoDownloadedViewModel, VideoDownloadFragmentBinding>() {
 
-    private val videoAdapter by lazy { VideoAdapter() }
+    private val mAdapter by lazy { VideoAdapter() }
 
-    private val downloadedBox = App.boxStore.boxFor(VideoInfo::class.java)
-
-    override fun layoutId() = R.layout.video_downloaded_fragment
+    override fun layoutId() = R.layout.video_download_fragment
 
     override fun initView(savedInstanceState: Bundle?) {
 
         refreshLayout.setOnRefreshListener {
-            videoAdapter.setList(downloadedBox.all)
-            refreshLayout.finishRefresh(true)
+            mAdapter.setDiffNewData(eventVM.mutableDownloadedTasks.value)
+            refreshLayout.finishRefresh(500)
         }
 
-        videoAdapter.setOnItemClickListener { adapter, view, position ->
+        eventVM.mutableDownloadedTasks.observe(viewLifecycleOwner) {
+            mAdapter.setList(it)
+        }
+
+        mAdapter.setOnItemClickListener { adapter, _, position ->
             val intent = Intent(Intent.ACTION_VIEW)
             val file = File((adapter.data as MutableList<VideoInfo>)[position].path)
             val uri: Uri
@@ -55,13 +57,15 @@ class VideoDownloadedFragment :
             startActivity(intent)
         }
 
-        recyclerView.init(MyLinearLayoutManager(requireContext()), videoAdapter).run {
+        recyclerView.init(MyLinearLayoutManager(requireContext()), mAdapter).run {
             val decoration = MyDiyDecoration()
             decoration.setColor(resources.getColor(R.color.lightGray))
             addItemDecoration(decoration)
         }
 
-        videoAdapter.setList(downloadedBox.all)
+        mAdapter.setEmptyView(R.layout.layout_empty)
+
+        refreshLayout.autoRefresh()
     }
 
     companion object {

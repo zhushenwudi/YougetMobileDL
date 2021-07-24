@@ -17,4 +17,5 @@ data class VideoInfo(
     var path: String = "",
     val totalSize: String = "",
     var photo: String = "",
+    var url: String = ""
 ) : Parcelable

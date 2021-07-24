@@ -14,4 +14,6 @@
     <color name="deepGray">#333333</color>
     <color name="fontGray">#666666</color>
     <color name="lightGray">#999999</color>
+    <color name="progress_default_color">#b1000000</color>
+    <color name="progress_grey_color">#449E9E9E</color>
 </resources>

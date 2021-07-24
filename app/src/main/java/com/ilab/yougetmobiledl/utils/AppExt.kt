@@ -15,6 +15,7 @@ import com.google.android.material.tabs.TabLayout
 import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
 import dev.utils.app.toast.ToastUtils
 import kotlin.math.abs
+import kotlin.system.exitProcess
 
 // 最近一次点击的时间
 private var mLastClickTime: Long = 0
@@ -37,7 +38,7 @@ fun AppCompatActivity.exit() {
         ToastUtils.showLong(TV_EXIT)
         exitTime = System.currentTimeMillis()
     } else {
-        finish()
+        exitProcess(0)
     }
 }
 

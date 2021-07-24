@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".base.App"
@@ -14,6 +15,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:theme="@style/ActivityFullScreen">
 
@@ -32,7 +34,11 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.DownloadService" />
+        <service
+            android:name=".service.DownloadService"
+            android:enabled="true"
+            android:exported="true"
+            android:priority="1000" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
