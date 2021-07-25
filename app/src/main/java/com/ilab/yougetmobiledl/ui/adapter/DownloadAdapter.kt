@@ -20,7 +20,7 @@ class DownloadAdapter :
         val tvStatus = when (item.status) {
             STATUS_NONE -> "未开始"
             STATUS_PREPARE_DOWNLOAD -> "等待中"
-            STATUS_DOWNLOADING -> "下载中" + item.percent + "%"
+            STATUS_DOWNLOADING -> "下载中" + if (item.percent == 0) "" else "${item.percent}%"
             STATUS_CONVERT -> "转换格式中"
             else -> "下载失败"
         }

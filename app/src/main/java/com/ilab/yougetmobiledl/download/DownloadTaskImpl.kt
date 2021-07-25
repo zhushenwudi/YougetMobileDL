@@ -157,7 +157,7 @@ class DownloadTaskImpl(
                         val downloadList = eventVM.mutableDownloadTasks.value
                         downloadList?.forEach { info ->
                             if (info.id == downloadInfo.id) {
-                                info.percent = 100
+                                info.percent = 0
                                 info.speed = "0 kB/s"
                                 info.status = STATUS_ERROR
                                 eventVM.mutableDownloadTasks.postValue(downloadList)

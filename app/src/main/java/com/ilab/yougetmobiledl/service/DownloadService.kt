@@ -114,7 +114,7 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
                 // 删除一个视频
                 Event.REMOVE_ONE -> downloadInfo?.let { downloadManager.remove(it) }
                 // 开始下载一个视频
-                Event.START_ONE -> downloadInfo?.let { downloadManager.resume(it) }
+                Event.START_ONE -> downloadInfo?.let { pQueue.add(downloadManager.resume(it)) }
                 // 暂停下载一个视频
                 Event.PAUSE_ONE -> downloadInfo?.let { downloadManager.pause(it) }
                 // 开始下载所有视频

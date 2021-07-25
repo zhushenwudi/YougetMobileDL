@@ -35,7 +35,7 @@ interface DownloadManager {
     /**
      * 恢复
      */
-    fun resume(downloadInfo: DownloadInfo)
+    fun resume(downloadInfo: DownloadInfo): DownloadInfo
 
     /**
      * 恢复所有

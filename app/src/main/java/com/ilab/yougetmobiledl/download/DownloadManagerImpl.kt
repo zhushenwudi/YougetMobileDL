@@ -52,7 +52,7 @@ object DownloadManagerImpl : DownloadManager {
             continuation.resume(it)
         }
         // 更新视图
-        changeAddUI(downloadInfo)
+        changeStatusUI(downloadInfo.id, STATUS_DOWNLOADING)
         downloadTask.start()
     }
 
@@ -78,12 +78,14 @@ object DownloadManagerImpl : DownloadManager {
         }
     }
 
-    override fun resume(downloadInfo: DownloadInfo) {
+    override fun resume(downloadInfo: DownloadInfo): DownloadInfo {
         downloadInfo.status = STATUS_PREPARE_DOWNLOAD
         // 更新数据库
-        dbController.createOrUpdate(downloadInfo)
+        downloadInfo.id = dbController.createOrUpdate(downloadInfo)
+        downloadInfo.percent = 0
         // 更新视图
         changeStatusUI(downloadInfo.id, STATUS_PREPARE_DOWNLOAD)
+        return downloadInfo
     }
 
     override fun resumeAll() {

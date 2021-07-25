@@ -92,13 +92,6 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             mViewModel.getVideoList(et)
                         }
                         loading.show()
-//                        val info = DownloadInfo(
-//                            name="【爱哥短】乌云乌云快走开~《别找我麻烦》翻唱",
-//                            totalSize = "4.50MB",
-//                            url = "https://www.bilibili.com/video/BV1GV411p7P9",
-//                            format = "flv"
-//                        )
-//                        (requireActivity() as MainActivity).add(info)
                     }
                 },
                 onRationale = {
