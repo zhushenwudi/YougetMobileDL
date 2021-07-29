@@ -1,27 +1,36 @@
 package com.ilab.yougetmobiledl.ui.fragment
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.VideoDownloadFragmentBinding
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.ext.init
+import com.ilab.yougetmobiledl.model.DownloadedInfo
+import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ilab.yougetmobiledl.ui.adapter.VideoAdapter
-import com.ilab.yougetmobiledl.utils.init
 import com.ilab.yougetmobiledl.viewmodel.VideoDownloadedViewModel
 import com.ilab.yougetmobiledl.widget.MyDiyDecoration
 import com.ilab.yougetmobiledl.widget.MyLinearLayoutManager
+import dev.utils.app.ClipboardUtils
+import dev.utils.app.DialogUtils
+import dev.utils.app.toast.ToastUtils
+import dev.utils.common.FileUtils
 import kotlinx.android.synthetic.main.video_download_fragment.*
 import java.io.File
 
 class VideoDownloadedFragment :
     BaseFragment<VideoDownloadedViewModel, VideoDownloadFragmentBinding>() {
 
+    private val activity by lazy { requireActivity() as MainActivity }
     private val mAdapter by lazy { VideoAdapter() }
+    private var dialog: AlertDialog? = null
 
     override fun layoutId() = R.layout.video_download_fragment
 
@@ -29,7 +38,7 @@ class VideoDownloadedFragment :
 
         refreshLayout.setOnRefreshListener {
             mAdapter.setDiffNewData(eventVM.mutableDownloadedTasks.value)
-            refreshLayout.finishRefresh(500)
+            refreshLayout.finishRefresh()
         }
 
         eventVM.mutableDownloadedTasks.observe(viewLifecycleOwner) {
@@ -38,23 +47,44 @@ class VideoDownloadedFragment :
 
         mAdapter.setOnItemClickListener { adapter, _, position ->
             val intent = Intent(Intent.ACTION_VIEW)
-            val file = File((adapter.data as MutableList<VideoInfo>)[position].path)
-            val uri: Uri
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                val contentUri = FileProvider.getUriForFile(
-                    requireContext(),
-                    requireActivity().packageName + ".FileProvider",
-                    file
-                )
-                intent.setDataAndType(contentUri, "video/*")
-            } else {
-                uri = Uri.fromFile(file)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                intent.setDataAndType(uri, "video/*")
-            }
+            val info = adapter.getItem(position) as DownloadedInfo
+            val file = File(info.path)
+            if (FileUtils.isFileExists(file)) {
+                val uri: Uri
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    val contentUri = FileProvider.getUriForFile(
+                        requireContext(),
+                        requireActivity().packageName + ".FileProvider",
+                        file
+                    )
+                    intent.setDataAndType(contentUri, "video/*")
+                } else {
+                    uri = Uri.fromFile(file)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    intent.setDataAndType(uri, "video/*")
+                }
 
-            startActivity(intent)
+                startActivity(intent)
+            } else {
+                dialog = DialogUtils.createAlertDialog(
+                    requireContext(), "未找到该视频文件", "是否删除该条记录",
+                    "确定", "取消", object : DialogUtils.DialogListener() {
+                        override fun onLeftButton(dialog: DialogInterface?) {
+                            activity.remove(info)
+                        }
+
+                        override fun onRightButton(dialog: DialogInterface?) {}
+                    })
+                dialog?.show()
+            }
+        }
+
+        mAdapter.setOnItemLongClickListener { adapter, _, position ->
+            val info = adapter.getItem(position) as DownloadedInfo
+            ClipboardUtils.copyText(info.url)
+            ToastUtils.showLong("URL地址已复制")
+            true
         }
 
         recyclerView.init(MyLinearLayoutManager(requireContext()), mAdapter).run {
@@ -66,6 +96,12 @@ class VideoDownloadedFragment :
         mAdapter.setEmptyView(R.layout.layout_empty)
 
         refreshLayout.autoRefresh()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        dialog?.hide()
+        dialog = null
     }
 
     companion object {

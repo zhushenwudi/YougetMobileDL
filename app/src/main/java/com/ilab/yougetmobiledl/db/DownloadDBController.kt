@@ -5,7 +5,7 @@ package com.ilab.yougetmobiledl.db
  */
 
 import com.ilab.yougetmobiledl.model.DownloadInfo
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 
 interface DownloadDBController {
     /**
@@ -16,12 +16,12 @@ interface DownloadDBController {
     /**
      * 查找 已下载 的全部信息
      */
-    fun findAllDownloaded(): List<VideoInfo>
+    fun findAllDownloaded(): List<DownloadedInfo>
 
     /**
      * 根据 id 获取 已下载 信息
      */
-    fun findDownloadedInfoById(id: Long): VideoInfo?
+    fun findDownloadedInfoById(id: Long): DownloadedInfo?
 
     /**
      * 根据 id 获取 下载中 信息
@@ -36,7 +36,7 @@ interface DownloadDBController {
     /**
      * 写入或更新 已下载 数据
      */
-    fun createOrUpdate(videoInfo: VideoInfo): Long
+    fun createOrUpdate(downloadedInfo: DownloadedInfo): Long
 
     /**
      * 删除 下载中 数据
@@ -46,5 +46,5 @@ interface DownloadDBController {
     /**
      * 删除 已下载 数据
      */
-    fun delete(videoInfo: VideoInfo)
+    fun delete(downloadedInfo: DownloadedInfo)
 }

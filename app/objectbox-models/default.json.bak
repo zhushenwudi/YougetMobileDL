@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:7013250790889530212",
-      "lastPropertyId": "9:7425761024397938538",
+      "lastPropertyId": "14:7295427024628098232",
       "name": "DownloadInfo",
       "properties": [
         {
@@ -55,6 +55,34 @@
           "id": "9:7425761024397938538",
           "name": "format",
           "type": 9
+        },
+        {
+          "id": "10:9035466706469878202",
+          "name": "pic",
+          "type": 9
+        },
+        {
+          "id": "11:4254579948093956588",
+          "name": "bvid",
+          "type": 9
+        },
+        {
+          "id": "12:5547893026103558059",
+          "name": "cid",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "13:5416696702070408760",
+          "name": "multiPageNum",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "14:7295427024628098232",
+          "name": "hasPointPart",
+          "type": 1,
+          "flags": 4
         }
       ],
       "relations": []

@@ -5,7 +5,11 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
+import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.HomeFragmentBinding
+import com.ilab.yougetmobiledl.ext.clickNoRepeat
+import com.ilab.yougetmobiledl.ext.init
+import com.ilab.yougetmobiledl.ext.requestPermission
 import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.HomeViewModel
@@ -48,14 +52,8 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                     HomeViewModel.Status.FIND_VIDEO_ERROR -> {
                         loading.refreshDetailLabel("寻找视频资源...失败")
                     }
-                    HomeViewModel.Status.PARSE_VIDEO_INFO -> {
-                        loading.refreshDetailLabel("解析视频资源...")
-                    }
                     HomeViewModel.Status.PARSE_VIDEO_ERROR -> {
                         loading.refreshDetailLabel("解析视频资源...失败")
-                    }
-                    HomeViewModel.Status.MATCH_ERROR -> {
-                        loading.refreshDetailLabel("未匹配到可用视频源")
                     }
                     HomeViewModel.Status.TIMEOUT_ERROR -> {
                         loading.refreshDetailLabel("请求超时")
@@ -77,13 +75,18 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
             (requireActivity() as MainActivity).add(it)
         }
 
+        button.clickNoRepeat {
+            mViewModel.getVideoList("https://www.bilibili.com/video/BV1yv411H76y")
+            loading.show()
+        }
+
         btnDownload.clickNoRepeat {
             requestPermission(
                 permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 onGrant = {
                     etUrl.text.toString().trim().let { et ->
                         if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
-                            showToast("请输入正确的url格式")
+                            eventVM.globalToast.postValue("请输入正确的url格式")
                             return@requestPermission
                         }
                         if (et.isEmpty()) {
@@ -95,10 +98,10 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                     }
                 },
                 onRationale = {
-                    showToast("您拒绝了权限")
+                    eventVM.globalToast.postValue("您拒绝了权限")
                 },
                 onDeny = {
-                    showToast("您即将前往设置菜单，并请授权")
+                    eventVM.globalToast.postValue("您即将前往设置菜单，并请授权")
                 }
             )
         }

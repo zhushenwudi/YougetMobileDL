@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
@@ -13,8 +15,12 @@ import androidx.navigation.Navigation
 import androidx.navigation.NavigatorProvider
 import androidx.navigation.ui.NavigationUI
 import com.ilab.yougetmobiledl.R
+import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.ActivityMainBinding
+import com.ilab.yougetmobiledl.ext.exit
+import com.ilab.yougetmobiledl.ext.interceptLongClick
 import com.ilab.yougetmobiledl.model.DownloadInfo
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.service.DownloadService
 import com.ilab.yougetmobiledl.ui.fragment.HomeFragment
 import com.ilab.yougetmobiledl.ui.fragment.VideoFragment
@@ -54,6 +60,11 @@ class MainActivity : AppCompatActivity() {
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
 
         startService()
+
+        eventVM.globalToast.observe(this) {
+            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            Log.e("aaa", it)
+        }
     }
 
     private fun initNavGraph(
@@ -108,8 +119,20 @@ class MainActivity : AppCompatActivity() {
         startService()
     }
 
+    fun remove(info: DownloadedInfo) {
+        mIntent.putExtra("msg", DownloadService.Event.REMOVE_ONE)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
     fun pause(info: DownloadInfo) {
         mIntent.putExtra("msg", DownloadService.Event.PAUSE_ONE)
+        mIntent.putExtra("downloadInfo", info)
+        startService()
+    }
+
+    fun convert(info: DownloadInfo) {
+        mIntent.putExtra("msg", DownloadService.Event.CONVERT)
         mIntent.putExtra("downloadInfo", info)
         startService()
     }

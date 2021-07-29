@@ -1,8 +1,7 @@
-package com.ilab.yougetmobiledl.utils
+package com.ilab.yougetmobiledl.ext
 
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.ftd.livepermissions.LivePermissions
 import com.ftd.livepermissions.PermissionResult
@@ -19,10 +18,6 @@ const val TV_EXIT = "再按一次退出程序"
 
 // 最近一次点击的控件ID
 private var mLastClickViewId = 0
-
-fun Fragment.showToast(msg: String, time: Int = Toast.LENGTH_LONG) {
-    Toast.makeText(requireContext(), msg, time).show()
-}
 
 fun exit() {
     if (System.currentTimeMillis() - exitTime > 2000L) {

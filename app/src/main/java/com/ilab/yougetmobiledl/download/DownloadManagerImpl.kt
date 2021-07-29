@@ -7,10 +7,12 @@ package com.ilab.yougetmobiledl.download
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.db.DBController
 import com.ilab.yougetmobiledl.model.DownloadInfo
+import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_CONVERT
 import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_DOWNLOADING
+import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_ERROR
 import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_NONE
 import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_PREPARE_DOWNLOAD
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.common.FileUtils
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -22,14 +24,17 @@ object DownloadManagerImpl : DownloadManager {
     private val latestDownloadTask = mutableListOf<DownloadInfo>()
 
     init {
-        val tempList = dbController.findAllDownloading().toMutableList()
-        tempList.forEach {
+        val downloadList = dbController.findAllDownloading().toMutableList()
+        downloadList.forEach {
             if (it.status == STATUS_PREPARE_DOWNLOAD || it.status == STATUS_DOWNLOADING) {
                 latestDownloadTask.add(it)
                 it.status = STATUS_PREPARE_DOWNLOAD
             }
         }
-        eventVM.mutableDownloadTasks.postValue(tempList)
+        eventVM.mutableDownloadTasks.postValue(downloadList)
+
+        val downloadedList = dbController.findAllDownloaded().toMutableList()
+        eventVM.mutableDownloadedTasks.postValue(downloadedList)
     }
 
     override fun add(downloadInfo: DownloadInfo): DownloadInfo {
@@ -48,15 +53,35 @@ object DownloadManagerImpl : DownloadManager {
         // 写入数据库
         dbController.createOrUpdate(downloadInfo)
         // 创建下载任务
-        val downloadTask = DownloadTaskImpl(downloadInfo, dbController, this, progressResult) {
+        val downloadTask = DownloadTaskImpl(downloadInfo, dbController) {
             continuation.resume(it)
         }
         // 更新视图
         changeStatusUI(downloadInfo.id, STATUS_DOWNLOADING)
-        downloadTask.start()
+        downloadTask.download(this, progressResult)
+    }
+
+    override suspend fun convert(
+        downloadInfo: DownloadInfo,
+        progressResult: (progress: Int) -> Unit
+    ): Pair<Boolean, String?> = suspendCancellableCoroutine { continuation ->
+        downloadInfo.status = STATUS_CONVERT
+        // 更新数据库
+        dbController.createOrUpdate(downloadInfo)
+        // 创建下载任务
+        val downloadTask = DownloadTaskImpl(downloadInfo, dbController) {
+            continuation.resume(it)
+        }
+        // 更新视图
+        changeStatusUI(downloadInfo.id, STATUS_CONVERT)
+        downloadTask.convert()
     }
 
     override fun pause(downloadInfo: DownloadInfo): Boolean {
+        // 正在下载的不允许暂停
+        if (downloadInfo.status == STATUS_DOWNLOADING) {
+            return false
+        }
         downloadInfo.status = STATUS_NONE
         // 更新数据库
         dbController.createOrUpdate(downloadInfo)
@@ -68,7 +93,7 @@ object DownloadManagerImpl : DownloadManager {
     override fun pauseAll() {
         val downloadList = eventVM.mutableDownloadTasks.value
         downloadList?.forEach {
-            if (it.status == STATUS_DOWNLOADING) {
+            if (it.status == STATUS_DOWNLOADING || it.status == STATUS_ERROR) {
                 return@forEach
             }
             it.status = STATUS_NONE
@@ -79,7 +104,10 @@ object DownloadManagerImpl : DownloadManager {
     }
 
     override fun resume(downloadInfo: DownloadInfo): DownloadInfo {
-        downloadInfo.status = STATUS_PREPARE_DOWNLOAD
+        if (downloadInfo.status == STATUS_NONE) {
+            // 未开始 -> 等待中
+            downloadInfo.status = STATUS_PREPARE_DOWNLOAD
+        }
         // 更新数据库
         downloadInfo.id = dbController.createOrUpdate(downloadInfo)
         downloadInfo.percent = 0
@@ -116,14 +144,14 @@ object DownloadManagerImpl : DownloadManager {
         eventVM.mutableDownloadTasks.postValue(tempList)
     }
 
-    override fun remove(videoInfo: VideoInfo) {
+    override fun remove(downloadedInfo: DownloadedInfo) {
         // 删除数据库
-        dbController.delete(videoInfo)
+        dbController.delete(downloadedInfo)
         // 清理文件
         AppUtil.getSDCardPath()?.let {
             val files = FileUtils.listFilesInDir(it)
             files.forEach { f ->
-                if (f.absolutePath.contains(videoInfo.name)) {
+                if (f.absolutePath.contains(downloadedInfo.name)) {
                     FileUtils.deleteFile(f)
                 }
             }
@@ -134,7 +162,7 @@ object DownloadManagerImpl : DownloadManager {
             val iterator = tempList.iterator()
             while (iterator.hasNext()) {
                 val info = iterator.next()
-                if (info.id == videoInfo.id) {
+                if (info.id == downloadedInfo.id) {
                     iterator.remove()
                 }
             }
@@ -148,7 +176,7 @@ object DownloadManagerImpl : DownloadManager {
             if (it.id == downloadInfo.id) {
                 it.percent = 100
                 it.speed = "0 kB/s"
-                it.status = DownloadInfo.STATUS_CONVERT
+                it.status = STATUS_CONVERT
                 dbController.createOrUpdate(it)
                 return@forEach
             }
@@ -160,7 +188,7 @@ object DownloadManagerImpl : DownloadManager {
         val tempList = eventVM.mutableDownloadTasks.value
         tempList?.forEach {
             if (it.id == downloadInfo.id) {
-                it.status = DownloadInfo.STATUS_ERROR
+                it.status = STATUS_ERROR
                 dbController.createOrUpdate(it)
             }
         }
@@ -171,7 +199,7 @@ object DownloadManagerImpl : DownloadManager {
         return dbController.findAllDownloading()
     }
 
-    override fun findAllDownloaded(): List<VideoInfo> {
+    override fun findAllDownloaded(): List<DownloadedInfo> {
         return dbController.findAllDownloaded()
     }
 

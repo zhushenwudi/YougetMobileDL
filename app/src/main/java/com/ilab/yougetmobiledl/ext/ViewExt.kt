@@ -1,4 +1,4 @@
-package com.ilab.yougetmobiledl.utils
+package com.ilab.yougetmobiledl.ext
 
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
@@ -6,7 +6,6 @@ import com.squareup.picasso.Picasso
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
 import com.youth.banner.holder.BannerImageHolder
-
 
 fun Banner<Int, BannerImageAdapter<Int>>.init(mutableList: List<Int>) {
     setAdapter(object : BannerImageAdapter<Int>(mutableList) {

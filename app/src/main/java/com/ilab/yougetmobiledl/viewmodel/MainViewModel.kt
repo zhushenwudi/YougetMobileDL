@@ -3,9 +3,9 @@ package com.ilab.yougetmobiledl.viewmodel
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.databinding.BindingAdapter
-import androidx.lifecycle.ViewModel
+import com.ilab.yougetmobiledl.base.BaseViewModel
 
-class MainViewModel : ViewModel()
+class MainViewModel : BaseViewModel()
 
 @BindingAdapter("android:layout_marginTop")
 fun setTopMargin(view: View, topMargin: Int) {

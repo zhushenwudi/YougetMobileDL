@@ -57,7 +57,7 @@ class FragmentNavigatorHideShow(
             ft.setMaxLifecycle(fragment, Lifecycle.State.STARTED)
             ft.hide(fragment)
         }
-        var frag: Fragment? = null
+        var frag: Fragment?
         val tag = destination.id.toString()
         frag = mFragmentManager.findFragmentByTag(tag)
         if (frag != null) {
@@ -86,8 +86,7 @@ class FragmentNavigatorHideShow(
         val isSingleTopReplacement = (navOptions != null && !initialNavigation
                 && navOptions.shouldLaunchSingleTop()
                 && mBackStack.peekLast() == destId)
-        val isAdded: Boolean
-        isAdded = if (initialNavigation) {
+        val isAdded: Boolean = if (initialNavigation) {
             true
         } else if (isSingleTopReplacement) {
             // Single Top means we only want one instance on the back stack

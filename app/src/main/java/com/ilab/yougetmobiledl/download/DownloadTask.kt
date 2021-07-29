@@ -5,5 +5,10 @@ package com.ilab.yougetmobiledl.download
  */
 
 interface DownloadTask {
-    fun start()
+    fun download(
+        manager: DownloadManagerImpl,
+        progressResponse: (progress: Int) -> Unit
+    )
+
+    fun convert()
 }

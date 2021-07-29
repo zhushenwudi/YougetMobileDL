@@ -1,7 +1,5 @@
 package com.ilab.yougetmobiledl.viewmodel
 
-import androidx.lifecycle.ViewModel
+import com.ilab.yougetmobiledl.base.BaseViewModel
 
-class VideoDownloadingViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
-}
+class VideoDownloadingViewModel : BaseViewModel()

@@ -8,9 +8,6 @@ import androidx.lifecycle.MutableLiveData;
 
 /**
  * LiveData 相关的工具类，简化 LiveData 操作
- *
- * @author funnywolf
- * @since 2019-04-22
  */
 public class LiveDataUtils {
     private static Handler sMainHandler;

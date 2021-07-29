@@ -6,7 +6,7 @@ package com.ilab.yougetmobiledl.download
 
 import com.ilab.yougetmobiledl.db.DBController
 import com.ilab.yougetmobiledl.model.DownloadInfo
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 
 interface DownloadManager {
     /**
@@ -18,6 +18,11 @@ interface DownloadManager {
      * 下载
      */
     suspend fun download(
+        downloadInfo: DownloadInfo,
+        progressResult: (progress: Int) -> Unit
+    ): Pair<Boolean, String?>
+
+    suspend fun convert(
         downloadInfo: DownloadInfo,
         progressResult: (progress: Int) -> Unit
     ): Pair<Boolean, String?>
@@ -50,7 +55,7 @@ interface DownloadManager {
     /**
      * 删除已经下载的
      */
-    fun remove(videoInfo: VideoInfo)
+    fun remove(downloadedInfo: DownloadedInfo)
 
     /**
      * 下载完成
@@ -70,7 +75,7 @@ interface DownloadManager {
     /**
      * 查找所有已下载的列表
      */
-    fun findAllDownloaded(): List<VideoInfo>
+    fun findAllDownloaded(): List<DownloadedInfo>
 
     /**
      * 获取上一次关闭程序前准备下载和正在下载的任务

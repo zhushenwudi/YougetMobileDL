@@ -1,7 +1,6 @@
 package com.ilab.yougetmobiledl.model
 
 import android.os.Parcelable
-import com.ilab.yougetmobiledl.utils.AppUtil
 import com.ilab.yougetmobiledl.utils.NoArg
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
@@ -15,14 +14,18 @@ data class DownloadInfo(
     var id: Long = 0,
 
     var name: String = "",
-    var path: String = "${AppUtil.getSDCardPath()}/$name.flv",
+    var bvid: String = "",
+    var cid: Int = 0,
+    var path: String = "",
     var totalSize: String = "",
     var percent: Int = 0,
     var speed: String = "",
     var status: Int = STATUS_NONE,
     var url: String = "",
     var format: String = "flv",
-    var pic: String? = null
+    var pic: String = "",
+    var videoPart: Int = 1,
+    var hasPart: Boolean = false
 ) : Parcelable, Comparable<DownloadInfo> {
     override fun compareTo(other: DownloadInfo): Int {
         return other.status - status
@@ -32,6 +35,8 @@ data class DownloadInfo(
         return "DownloadInfo(\n" +
                 "id=$id, \n" +
                 "name='$name', \n" +
+                "bvid='$bvid', \n" +
+                "cid='$cid', \n" +
                 "path='$path', \n" +
                 "totalSize='$totalSize', \n" +
                 "percent=$percent, \n" +
@@ -39,6 +44,9 @@ data class DownloadInfo(
                 "status=$status, \n" +
                 "url='$url', \n" +
                 "format='$format'\n" +
+                "pic='$pic'\n" +
+                "videoPart='$videoPart'\n" +
+                "hasPart='$hasPart'\n" +
                 ")"
     }
 
@@ -57,5 +65,8 @@ data class DownloadInfo(
 
         // 下载失败
         const val STATUS_ERROR = 4
+
+        // 转换格式失败
+        const val STATUS_CONVERT_FAIL = 5
     }
 }

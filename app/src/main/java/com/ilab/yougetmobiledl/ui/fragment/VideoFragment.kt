@@ -12,10 +12,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
 import com.ilab.yougetmobiledl.databinding.VideoFragmentBinding
+import com.ilab.yougetmobiledl.ext.clickNoRepeat
+import com.ilab.yougetmobiledl.ext.interceptLongClick
+import com.ilab.yougetmobiledl.ext.requestPermissions
 import com.ilab.yougetmobiledl.ui.activity.MainActivity
-import com.ilab.yougetmobiledl.utils.clickNoRepeat
-import com.ilab.yougetmobiledl.utils.interceptLongClick
-import com.ilab.yougetmobiledl.utils.requestPermissions
 import com.ilab.yougetmobiledl.viewmodel.VideoViewModel
 import kotlinx.android.synthetic.main.video_fragment.*
 

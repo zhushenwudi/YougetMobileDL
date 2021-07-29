@@ -1,8 +1,8 @@
 package com.ilab.yougetmobiledl.viewmodel
 
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import com.ilab.yougetmobiledl.base.BaseViewModel
 
-class VideoViewModel : ViewModel() {
+class VideoViewModel : BaseViewModel() {
     val statusBarHeight = MutableLiveData(0)
 }

@@ -1,10 +1,9 @@
 package com.ilab.yougetmobiledl.base
 
+import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import com.android.volley.RequestQueue
-import com.android.volley.toolbox.Volley
 import com.chaquo.python.android.PyApplication
 import com.heima.easysp.SharedPreferencesUtils
 import com.ilab.yougetmobiledl.model.MyObjectBox
@@ -22,15 +21,15 @@ class App : PyApplication(), ViewModelStoreOwner {
         lateinit var boxStore: BoxStore
         lateinit var eventVM: MyEventVM
         lateinit var sp: SharedPreferencesUtils
-        lateinit var volley: RequestQueue
         var isInitDB = true
+        lateinit var instance: Context
     }
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         mAppViewModelStore = ViewModelStore()
         sp = SharedPreferencesUtils.init(this)
-        volley = Volley.newRequestQueue(this)
         // 打开 lib 内部日志 - 线上 (release) 环境，不调用方法
         DevUtils.openLog()
         // 标示 debug 模式

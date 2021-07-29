@@ -1,17 +1,16 @@
 package com.ilab.yougetmobiledl.download
 
+import android.util.Log
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.chaquo.python.Python
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.db.DBController
 import com.ilab.yougetmobiledl.model.DownloadInfo
-import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_ERROR
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_CONVERT_FAIL
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.app.ShellUtils
-import dev.utils.app.image.BitmapUtils
-import dev.utils.app.image.ImageUtils
 import dev.utils.common.FileUtils
 import kotlinx.coroutines.*
 import kotlin.math.round
@@ -23,8 +22,6 @@ import kotlin.math.round
 class DownloadTaskImpl(
     private val downloadInfo: DownloadInfo,
     private val dbController: DBController,
-    private val manager: DownloadManagerImpl,
-    private val progressResponse: (progress: Int) -> Unit,
     private val resultResult: (res: Pair<Boolean, String?>) -> Unit
 ) : DownloadTask {
 
@@ -35,7 +32,10 @@ class DownloadTaskImpl(
 
     private var downloadStatus = Status.IDLE
 
-    override fun start() {
+    override fun download(
+        manager: DownloadManagerImpl,
+        progressResponse: (progress: Int) -> Unit
+    ) {
         downloadStatus = Status.DOWNLOAD
         progressResponse(0)
         AppUtil.getSDCardPath()?.let {
@@ -44,19 +44,19 @@ class DownloadTaskImpl(
                 supervisorScope {
                     launch(Dispatchers.IO) {
                         while (downloadStatus == Status.DOWNLOAD) {
-                            catchLog()
+                            catchLog(progressResponse)
                         }
                     }
 
                     launch(Dispatchers.IO) {
                         val py = Python.getInstance()
-                        val res =
-                            py.getModule("download").callAttr("download", downloadInfo.url, it)
-                                .toString()
+                        val res = py.getModule("download")
+                            .callAttr("download", downloadInfo.url, it, downloadInfo.name)
+                            .toString()
                         progressResponse(100)
                         if (res == "finish") {
                             manager.downloadSuccess(downloadInfo)
-                            convertVideo()
+                            convert()
                         } else {
                             manager.downloadFail(downloadInfo)
                             resultResult.invoke(Pair(false, "文件下载失败"))
@@ -67,7 +67,7 @@ class DownloadTaskImpl(
         }
     }
 
-    private suspend fun catchLog() {
+    private suspend fun catchLog(progressResponse: (progress: Int) -> Unit) {
         try {
             ShellUtils.execCmd(CLEAR_LOG, false)
             delay(500)
@@ -105,7 +105,7 @@ class DownloadTaskImpl(
         }
     }
 
-    private fun convertVideo() {
+    override fun convert() {
         AppUtil.getSDCardPath()?.let {
             // flv -> mp4
             val src = "$it/${downloadInfo.name}.flv"
@@ -120,20 +120,13 @@ class DownloadTaskImpl(
                         // 生成已下载实例
                         val path = "$it/${downloadInfo.name}.mp4"
 
-                        val info = VideoInfo(
+                        val info = DownloadedInfo(
                             name = downloadInfo.name,
                             path = path,
                             totalSize = FileUtils.getFileSize(path),
-                            url = downloadInfo.url
+                            url = downloadInfo.url,
+                            photo = downloadInfo.pic
                         )
-                        BitmapUtils.getVideoThumbnail(path)?.let { bitmap ->
-                            val photo =
-                                AppUtil.getSDCardPath() + "/temp/" +
-                                        downloadInfo.name.substringBeforeLast('.') + ".png"
-                            if (ImageUtils.saveBitmapToSDCardPNG(bitmap, photo)) {
-                                info.photo = photo
-                            }
-                        }
                         // 删除内存中的任务，从下载中数据库删除，写入已下载数据库
                         val downloads = mutableListOf<DownloadInfo>()
                         eventVM.mutableDownloadTasks.value?.let { it1 -> downloads.addAll(it1) }
@@ -159,7 +152,7 @@ class DownloadTaskImpl(
                             if (info.id == downloadInfo.id) {
                                 info.percent = 0
                                 info.speed = "0 kB/s"
-                                info.status = STATUS_ERROR
+                                info.status = STATUS_CONVERT_FAIL
                                 eventVM.mutableDownloadTasks.postValue(downloadList)
                                 dbController.createOrUpdate(info)
                                 return@forEach
@@ -167,7 +160,9 @@ class DownloadTaskImpl(
                         }
                         resultResult.invoke(Pair(false, "格式转换失败"))
                     }
-                }, {}) {}
+                }, { log ->
+                    Log.d("aaa", log.message)
+                }) {}
         }
     }
 

@@ -4,10 +4,7 @@ import android.annotation.TargetApi
 import android.app.*
 import android.content.Intent
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
 import com.ilab.yougetmobiledl.R
@@ -15,7 +12,9 @@ import com.ilab.yougetmobiledl.base.App.Companion.isInitDB
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.download.DownloadManagerImpl
 import com.ilab.yougetmobiledl.model.DownloadInfo
+import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_CONVERT_FAIL
 import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_PREPARE_DOWNLOAD
+import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.utils.AppUtil.TAG
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -25,7 +24,6 @@ import java.util.concurrent.PriorityBlockingQueue
 class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
 
     private var serviceObserver = ServiceObserver()
-    private var handler: Handler? = null
 
     private val pQueue = PriorityBlockingQueue<DownloadInfo>(10)
     private var isRunning = true
@@ -45,15 +43,14 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
         START_ONE,
         PAUSE_ONE,
         START_ALL,
-        PAUSE_ALL
+        PAUSE_ALL,
+        CONVERT
     }
 
     // 监听生命周期 ==> 关闭服务并移除监听
     internal inner class ServiceObserver : LifecycleObserver {
         @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         fun release() {
-            handler?.removeCallbacksAndMessages(null)
-            handler = null
             pQueue.removeAll { true }
             isRunning = false
             stopForeground(true)
@@ -73,16 +70,31 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
                     if (!mutex.isLocked) {
                         // 没有任务在执行
                         val info = pQueue.take()
-                        Log.d(TAG(), "正在下载 ${info.name}")
+                        Log.d(TAG(), "正在处理的任务名: ${info.name}")
                         currentInfo = info
-                        val res = downloadManager.download(info) {
-                            currentInfo?.percent = it
-                            sendNotification(currentInfo)
+                        // 状态为 转换失败 -> 重新转换
+                        if (info.status == STATUS_CONVERT_FAIL) {
+                            val res = downloadManager.convert(info) {
+                                currentInfo?.percent = it
+                                sendNotification(currentInfo)
+                            }
+                            if (res.first) {
+                                eventVM.globalToast.postValue("转换成功 ${info.name}")
+                            } else {
+                                eventVM.globalToast.postValue("转换失败: ${res.second}")
+                            }
                         }
-                        if (res.first) {
-                            showToast("下载成功 ${info.name}")
-                        } else {
-                            showToast("下载失败: ${res.second}")
+                        // 状态为 准备下载 -> 下载
+                        else if (info.status == STATUS_PREPARE_DOWNLOAD) {
+                            val res = downloadManager.download(info) {
+                                currentInfo?.percent = it
+                                sendNotification(currentInfo)
+                            }
+                            if (res.first) {
+                                eventVM.globalToast.postValue("下载成功 ${info.name}")
+                            } else {
+                                eventVM.globalToast.postValue("下载失败: ${res.second}")
+                            }
                         }
                     }
                 } else if (!mutex.isLocked) {
@@ -92,8 +104,6 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
                 delay(1000)
             }
         }
-
-        handler = Handler(Looper.getMainLooper())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -108,13 +118,23 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
 
         launch {
             val downloadInfo = intent?.getParcelableExtra<DownloadInfo>("downloadInfo")
+            val downloadedInfo = intent?.getParcelableExtra<DownloadedInfo>("downloadedInfo")
             when (intent?.getSerializableExtra("msg")) {
                 // 添加一个视频
                 Event.ADD_ONE -> downloadInfo?.let { pQueue.add(downloadManager.add(it)) }
                 // 删除一个视频
-                Event.REMOVE_ONE -> downloadInfo?.let { downloadManager.remove(it) }
-                // 开始下载一个视频
-                Event.START_ONE -> downloadInfo?.let { pQueue.add(downloadManager.resume(it)) }
+                Event.REMOVE_ONE -> {
+                    downloadInfo?.let { downloadManager.remove(it) }
+                    downloadedInfo?.let { downloadManager.remove(it) }
+                }
+                // 开始下载一个视频(下载、转换格式)
+                Event.START_ONE, Event.CONVERT -> downloadInfo?.let {
+                    pQueue.add(
+                        downloadManager.resume(
+                            it
+                        )
+                    )
+                }
                 // 暂停下载一个视频
                 Event.PAUSE_ONE -> downloadInfo?.let { downloadManager.pause(it) }
                 // 开始下载所有视频
@@ -173,13 +193,6 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
 
             startForeground(1, notification)
         }
-    }
-
-    private fun showToast(msg: String) {
-        handler?.post {
-            Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
-        }
-        Log.e("aaa", msg)
     }
 
     companion object {
