@@ -114,14 +114,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun remove(info: DownloadInfo) {
-        mIntent.putExtra("msg", DownloadService.Event.REMOVE_ONE)
+        mIntent.putExtra("msg", DownloadService.Event.REMOVE_DOWNLOAD_ONE)
         mIntent.putExtra("downloadInfo", info)
         startService()
     }
 
     fun remove(info: DownloadedInfo) {
-        mIntent.putExtra("msg", DownloadService.Event.REMOVE_ONE)
-        mIntent.putExtra("downloadInfo", info)
+        mIntent.putExtra("msg", DownloadService.Event.REMOVE_DOWNLOADED_ONE)
+        mIntent.putExtra("downloadedInfo", info)
         startService()
     }
 

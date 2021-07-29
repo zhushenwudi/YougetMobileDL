@@ -39,7 +39,8 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
 
     enum class Event {
         ADD_ONE,
-        REMOVE_ONE,
+        REMOVE_DOWNLOAD_ONE,
+        REMOVE_DOWNLOADED_ONE,
         START_ONE,
         PAUSE_ONE,
         START_ALL,
@@ -118,22 +119,20 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
 
         launch {
             val downloadInfo = intent?.getParcelableExtra<DownloadInfo>("downloadInfo")
-            val downloadedInfo = intent?.getParcelableExtra<DownloadedInfo>("downloadedInfo")
             when (intent?.getSerializableExtra("msg")) {
                 // 添加一个视频
                 Event.ADD_ONE -> downloadInfo?.let { pQueue.add(downloadManager.add(it)) }
                 // 删除一个视频
-                Event.REMOVE_ONE -> {
+                Event.REMOVE_DOWNLOAD_ONE -> {
                     downloadInfo?.let { downloadManager.remove(it) }
+                }
+                Event.REMOVE_DOWNLOADED_ONE -> {
+                    val downloadedInfo = intent.getParcelableExtra<DownloadedInfo>("downloadedInfo")
                     downloadedInfo?.let { downloadManager.remove(it) }
                 }
                 // 开始下载一个视频(下载、转换格式)
                 Event.START_ONE, Event.CONVERT -> downloadInfo?.let {
-                    pQueue.add(
-                        downloadManager.resume(
-                            it
-                        )
-                    )
+                    pQueue.add(downloadManager.resume(it))
                 }
                 // 暂停下载一个视频
                 Event.PAUSE_ONE -> downloadInfo?.let { downloadManager.pause(it) }

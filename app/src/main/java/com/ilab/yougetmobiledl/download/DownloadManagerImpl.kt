@@ -129,45 +129,49 @@ object DownloadManagerImpl : DownloadManager {
 
     override fun remove(downloadInfo: DownloadInfo) {
         // 删除数据库
-        dbController.delete(downloadInfo)
-        // 更新视图
-        val tempList = eventVM.mutableDownloadTasks.value
-        if (tempList?.isNotEmpty() == true) {
-            val iterator = tempList.iterator()
-            while (iterator.hasNext()) {
-                val info = iterator.next()
-                if (info.id == downloadInfo.id) {
-                    iterator.remove()
+        val isSuccess = dbController.delete(downloadInfo)
+        if (isSuccess) {
+            // 更新视图
+            val tempList = eventVM.mutableDownloadTasks.value
+            if (tempList?.isNotEmpty() == true) {
+                val iterator = tempList.iterator()
+                while (iterator.hasNext()) {
+                    val info = iterator.next()
+                    if (info.id == downloadInfo.id) {
+                        iterator.remove()
+                    }
                 }
             }
+            eventVM.mutableDownloadTasks.postValue(tempList)
         }
-        eventVM.mutableDownloadTasks.postValue(tempList)
     }
 
     override fun remove(downloadedInfo: DownloadedInfo) {
         // 删除数据库
-        dbController.delete(downloadedInfo)
-        // 清理文件
-        AppUtil.getSDCardPath()?.let {
-            val files = FileUtils.listFilesInDir(it)
-            files.forEach { f ->
-                if (f.absolutePath.contains(downloadedInfo.name)) {
-                    FileUtils.deleteFile(f)
+        val isSuccess = dbController.delete(downloadedInfo)
+        if (isSuccess) {
+            // 清理文件
+            AppUtil.getSDCardPath()?.let {
+                val files = FileUtils.listFilesInDir(it)
+                files.forEach { f ->
+                    if (f.absolutePath.contains(downloadedInfo.name)) {
+                        FileUtils.deleteFile(f)
+                    }
                 }
             }
-        }
-        // 更新视图
-        val tempList = eventVM.mutableDownloadedTasks.value
-        if (tempList?.isNotEmpty() == true) {
-            val iterator = tempList.iterator()
-            while (iterator.hasNext()) {
-                val info = iterator.next()
-                if (info.id == downloadedInfo.id) {
-                    iterator.remove()
+            // 更新视图
+            val tempList = eventVM.mutableDownloadedTasks.value
+            if (tempList?.isNotEmpty() == true) {
+                val iterator = tempList.iterator()
+                while (iterator.hasNext()) {
+                    val info = iterator.next()
+                    if (info.id == downloadedInfo.id) {
+                        iterator.remove()
+                    }
                 }
             }
+            eventVM.mutableDownloadedTasks.postValue(tempList)
         }
-        eventVM.mutableDownloadedTasks.postValue(tempList)
     }
 
     override fun downloadSuccess(downloadInfo: DownloadInfo) {

@@ -31,6 +31,10 @@ data class DownloadInfo(
         return other.status - status
     }
 
+    fun clone(): DownloadInfo {
+        return this.copy()
+    }
+
     override fun toString(): String {
         return "DownloadInfo(\n" +
                 "id=$id, \n" +

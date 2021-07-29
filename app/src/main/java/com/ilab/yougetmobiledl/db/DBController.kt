@@ -34,11 +34,11 @@ class DBController : DownloadDBController {
         return downloadedBox.put(downloadedInfo)
     }
 
-    override fun delete(downloadInfo: DownloadInfo) {
-        downloadBox.remove(downloadInfo.id)
+    override fun delete(downloadInfo: DownloadInfo): Boolean {
+        return downloadBox.remove(downloadInfo.id)
     }
 
-    override fun delete(downloadedInfo: DownloadedInfo) {
-        downloadedBox.remove(downloadedInfo.id)
+    override fun delete(downloadedInfo: DownloadedInfo): Boolean {
+        return downloadedBox.remove(downloadedInfo.id)
     }
 }

@@ -41,10 +41,10 @@ interface DownloadDBController {
     /**
      * 删除 下载中 数据
      */
-    fun delete(downloadInfo: DownloadInfo)
+    fun delete(downloadInfo: DownloadInfo): Boolean
 
     /**
      * 删除 已下载 数据
      */
-    fun delete(downloadedInfo: DownloadedInfo)
+    fun delete(downloadedInfo: DownloadedInfo): Boolean
 }

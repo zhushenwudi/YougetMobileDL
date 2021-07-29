@@ -2,13 +2,20 @@ package com.ilab.yougetmobiledl.ui.adapter
 
 import android.widget.ImageView
 import com.chad.library.adapter.base.BaseQuickAdapter
+import com.chad.library.adapter.base.module.DraggableModule
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.squareup.picasso.Picasso
 
 class VideoAdapter :
-    BaseQuickAdapter<DownloadedInfo, BaseViewHolder>(R.layout.item_type_downloaded) {
+    BaseQuickAdapter<DownloadedInfo, BaseViewHolder>(R.layout.item_type_downloaded),
+    DraggableModule {
+
+    init {
+        addChildClickViewIds(R.id.btnDel, R.id.clLayout)
+        addChildLongClickViewIds(R.id.clLayout)
+    }
 
     override fun convert(holder: BaseViewHolder, item: DownloadedInfo) {
         holder.setText(R.id.name, item.name)
