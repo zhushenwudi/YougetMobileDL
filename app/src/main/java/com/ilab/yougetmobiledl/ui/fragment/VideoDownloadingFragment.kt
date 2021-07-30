@@ -46,13 +46,13 @@ class VideoDownloadingFragment :
             } else {
                 val info = adapter.getItem(position) as DownloadInfo
                 when (info.status) {
-                    // 未开始 -> 开始、删除
+                    // 未开始
                     STATUS_NONE -> activity.start(info)
-                    // 等待中 -> 暂停、删除
+                    // 等待中
                     STATUS_PREPARE_DOWNLOAD -> activity.pause(info)
-                    // 转换失败 -> 转换、删除
+                    // 转换失败
                     STATUS_CONVERT_FAIL -> activity.convert(info)
-                    // 下载失败 -> 开始、删除
+                    // 下载失败
                     STATUS_ERROR -> activity.start(info)
                 }
             }

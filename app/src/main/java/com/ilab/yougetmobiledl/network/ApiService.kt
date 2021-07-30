@@ -4,6 +4,7 @@ import com.ilab.yougetmobiledl.model.DualStream
 import com.ilab.yougetmobiledl.model.SplashPhoto
 import com.ilab.yougetmobiledl.model.VideoInfo
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query
@@ -46,5 +47,5 @@ interface ApiService {
      * 判断视频地址是否有效
      */
     @GET
-    suspend fun getHasCurrentVideo(@Url url: String): ResponseBody
+    suspend fun getHasCurrentVideo(@Url url: String): Response<ResponseBody>
 }

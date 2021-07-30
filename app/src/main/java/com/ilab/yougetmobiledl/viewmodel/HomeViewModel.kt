@@ -45,7 +45,8 @@ class HomeViewModel : BaseViewModel() {
                     requestNoCheck({
                         apiService.getHasCurrentVideo(url)
                     }, {
-                        checkPlatform(url)
+                        val rawUrl = it.raw().request().url().toString()
+                        checkPlatform(rawUrl)
                     }, {
                         postEvent(Status.FIND_VIDEO_ERROR)
                     })
@@ -56,10 +57,21 @@ class HomeViewModel : BaseViewModel() {
         }
     }
 
-    private fun checkPlatform(url: String) {
+    private fun checkPlatform(rawUrl: String) {
+        Log.e("aaa", "rawUrl: $rawUrl")
+        var url = rawUrl.replace("m.bilibili.com", "www.bilibili.com")
+        var hasPart = false
+        if ('?' in rawUrl) {
+            val paramsMap = AppUtil.getUrlParamsMap(rawUrl)
+            hasPart = paramsMap.containsKey("p")
+            url = rawUrl.substringBefore('?')
+            if (hasPart) {
+                paramsMap["p"]?.let { url += ("?p=$it") }
+            }
+        }
+        Log.e("aaa", url)
         when {
             "bilibili.com" in url -> {
-                val hasPart = "p=" in url.substringAfter("?")
                 // b站长链
                 when {
                     "av" in url -> {
@@ -82,12 +94,10 @@ class HomeViewModel : BaseViewModel() {
                     }
                     else -> {
                         // 其他
+                        val downloadInfo = DownloadInfo::class.java.newInstance()
+                        downloadInfo.url = url
                     }
                 }
-            }
-            "b23.tv" in url -> {
-                // b站短链
-                // TODO: 调用 python curl 函数
             }
             else -> {
                 // 其他平台视频

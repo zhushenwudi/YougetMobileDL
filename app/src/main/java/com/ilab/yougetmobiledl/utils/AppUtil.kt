@@ -147,4 +147,20 @@ object AppUtil {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         return simpleDateFormat.format(Date(time))
     }
+
+    /***
+     * 获取url参数列表;
+     * @param url
+     * @return Map
+     */
+    fun getUrlParamsMap(url: String): Map<String, String> {
+        val params = url.substringAfter('?')
+        val keyValues = params.split("&").toTypedArray()
+        val result = mutableMapOf<String, String>()
+        keyValues.forEach { keyValue ->
+            val strSplit = keyValue.split("=").toTypedArray()
+            result[strSplit[0]] = strSplit[1]
+        }
+        return result
+    }
 }

@@ -76,7 +76,7 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
         }
 
         button.clickNoRepeat {
-            mViewModel.getVideoList("https://www.bilibili.com/video/BV1yv411H76y")
+            mViewModel.getVideoList("https://b23.tv/VkWj3j")
             loading.show()
         }
 
@@ -90,7 +90,8 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             return@requestPermission
                         }
                         if (et.isEmpty()) {
-                            mViewModel.getVideoList("https://www.bilibili.com/video/BV1GV411p7P9")
+//                            mViewModel.getVideoList("https://www.bilibili.com/video/BV1GV411p7P9")
+                            mViewModel.getVideoList("https://www.bilibili.com/bangumi/play/ss38931")
                         } else {
                             mViewModel.getVideoList(et)
                         }
