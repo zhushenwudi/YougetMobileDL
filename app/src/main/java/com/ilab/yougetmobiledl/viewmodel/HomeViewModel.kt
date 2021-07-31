@@ -4,13 +4,17 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.ilab.yougetmobiledl.base.BaseViewModel
 import com.ilab.yougetmobiledl.base.eventVM
-import com.ilab.yougetmobiledl.model.*
+import com.ilab.yougetmobiledl.model.Bangumi
+import com.ilab.yougetmobiledl.model.DownloadInfo
+import com.ilab.yougetmobiledl.model.Episode
 import com.ilab.yougetmobiledl.network.apiService
 import com.ilab.yougetmobiledl.network.request
 import com.ilab.yougetmobiledl.network.requestNoCheck
 import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.LogPrintUtils
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import retrofit2.await
 import retrofit2.awaitResponse
 
@@ -30,31 +34,15 @@ class HomeViewModel : BaseViewModel() {
     val downloadInfo = MutableLiveData<DownloadInfo>()
     val chooseEP = MutableLiveData<Bangumi>()
 
-    fun getVideoList(url: String) {
+    fun handleURL(url: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            // 判断内存中已下载和下载中是否包括该 url
-            if (eventVM.mutableDownloadedTasks.value?.any { it.url == url } == true) {
-                postEvent(Status.ALREADY_DOWNLOAD)
-                return@launch
-            }
-            if (eventVM.mutableDownloadTasks.value?.any { it.url == url } == true) {
-                postEvent(Status.ALREADY_DOWNLOAD)
-                return@launch
-            }
-
+            downloadStatus.postValue(Status.FIND_VIDEO_INFO)
             try {
-                withTimeout(10000) {
-                    downloadStatus.postValue(Status.FIND_VIDEO_INFO)
-                    try {
-                        val html = apiService.getHasCurrentVideo(url).awaitResponse()
-                        checkPlatform(html.raw().request().url().toString())
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        postEvent(Status.FIND_VIDEO_ERROR)
-                    }
-                }
-            } catch (e: TimeoutCancellationException) {
-                postEvent(Status.TIMEOUT_ERROR)
+                val html = apiService.getHasCurrentVideo(url).awaitResponse()
+                checkPlatform(html.raw().request().url().toString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                postEvent(Status.FIND_VIDEO_ERROR)
             }
         }
     }
@@ -62,54 +50,79 @@ class HomeViewModel : BaseViewModel() {
     private suspend fun checkPlatform(rawUrl: String) {
         var url = rawUrl.replace("m.bilibili.com", "www.bilibili.com")
         var hasPart = false
-        if ('?' in rawUrl) {
-            val paramsMap = AppUtil.getUrlParamsMap(rawUrl)
+        if ('?' in url) {
+            val paramsMap = AppUtil.getUrlParamsMap(url)
             hasPart = paramsMap.containsKey("p")
-            url = rawUrl.substringBefore('?')
+            url = url.substringBefore('?')
             if (hasPart) {
                 paramsMap["p"]?.let { url += ("?p=$it") }
             }
         }
-        LogPrintUtils.e(url)
         when {
             url.matches(Regex(MATCH_AV)) -> {
-                getVideoInfo(
-                    url = url,
-                    aid = url.getVideoKey("av").toInt(),
-                    bvid = null,
-                    hasPart = hasPart
-                )
+                // AV
+                url = url.substringBefore('?')
+                if (checkURL(url)) {
+                    getVideoInfo(
+                        url = url,
+                        aid = url.getVideoKey("av").toInt(),
+                        bvid = null,
+                        hasPart = hasPart
+                    )
+                }
             }
             url.matches(Regex(MATCH_BV)) -> {
                 // BV
-                getVideoInfo(
-                    url = url,
-                    aid = null,
-                    bvid = url.getVideoKey("BV"),
-                    hasPart = hasPart
-                )
+                url = url.substringBefore('?')
+                if (checkURL(url)) {
+                    getVideoInfo(
+                        url = url,
+                        aid = null,
+                        bvid = url.getVideoKey("BV"),
+                        hasPart = hasPart
+                    )
+                }
             }
             url.matches(Regex(MATCH_AUDIO)) -> {
                 // 音频
+
             }
             url.matches(Regex(MATCH_BANGUMI_SS)) -> {
                 // 番剧集，弹窗显示选择分P
-                getBangumiInfo(
-                    seasonId = url.getVideoKey("ss").toInt(),
-                    epId = null
-                )
+                if (checkURL(url)) {
+                    getBangumiInfo(
+                        seasonId = url.getVideoKey("ss").toInt(),
+                        epId = null
+                    )
+                }
             }
             url.matches(Regex(MATCH_BANGUMI_EP)) -> {
                 // 单集番剧
-                getBangumiInfo(
-                    seasonId = null,
-                    epId = url.getVideoKey("ep").toInt()
-                )
+                if (checkURL(url)) {
+                    getBangumiInfo(
+                        seasonId = null,
+                        epId = url.getVideoKey("ep").toInt()
+                    )
+                }
             }
             else -> {
 
             }
         }
+        LogPrintUtils.e(url)
+    }
+
+    private fun checkURL(url: String): Boolean {
+        // 判断内存中已下载和下载中是否包括该 url
+        if (eventVM.mutableDownloadedTasks.value?.any { it.url == url } == true) {
+            postEvent(Status.ALREADY_DOWNLOAD)
+            return false
+        }
+        if (eventVM.mutableDownloadTasks.value?.any { it.url == url } == true) {
+            postEvent(Status.ALREADY_DOWNLOAD)
+            return true
+        }
+        return false
     }
 
     // 获取AV/BV视频信息

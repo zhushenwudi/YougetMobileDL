@@ -47,8 +47,8 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
         )
 
         button.clickNoRepeat {
-//            mViewModel.getVideoList("https://b23.tv/VkWj3j")
-            mViewModel.getVideoList("https://www.bilibili.com/bangumi/play/ep409584")
+//            mViewModel.handleURL("https://b23.tv/VkWj3j")
+            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ep409584")
             loading.show()
         }
 
@@ -62,10 +62,10 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             return@requestPermission
                         }
                         if (et.isEmpty()) {
-//                            mViewModel.getVideoList("https://www.bilibili.com/video/BV1GV411p7P9")
-                            mViewModel.getVideoList("https://www.bilibili.com/bangumi/play/ss38931")
+//                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
+                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ss38931")
                         } else {
-                            mViewModel.getVideoList(et)
+                            mViewModel.handleURL(et)
                         }
                         loading.show()
                     }
