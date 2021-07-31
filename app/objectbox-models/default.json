@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:7013250790889530212",
-      "lastPropertyId": "17:8063086738948377325",
+      "lastPropertyId": "18:2575027013729478668",
       "name": "DownloadInfo",
       "properties": [
         {
@@ -89,13 +89,19 @@
           "name": "epid",
           "type": 5,
           "flags": 4
+        },
+        {
+          "id": "18:2575027013729478668",
+          "name": "type",
+          "type": 5,
+          "flags": 4
         }
       ],
       "relations": []
     },
     {
       "id": "3:3246980470679524839",
-      "lastPropertyId": "6:8123724912964215077",
+      "lastPropertyId": "7:2397927015820202173",
       "name": "DownloadedInfo",
       "properties": [
         {
@@ -128,6 +134,12 @@
           "id": "6:8123724912964215077",
           "name": "url",
           "type": 9
+        },
+        {
+          "id": "7:2397927015820202173",
+          "name": "type",
+          "type": 5,
+          "flags": 4
         }
       ],
       "relations": []

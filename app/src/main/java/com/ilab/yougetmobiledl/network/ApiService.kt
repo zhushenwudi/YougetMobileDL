@@ -62,4 +62,10 @@ interface ApiService {
         @Query("otype") otype: String = "json",
         @Query("qn") qn: Int = 112,
     ): Call<BangumiDualStream>
+
+    @GET("/audio/music-service-c/web/song/info")
+    fun getAudioInfo(@Query("sid") sid: Int): Call<AudioInfo>
+
+    @GET("/audio/music-service-c/web/url")
+    fun getAudioStream(@Query("sid") sid: Int): Call<AudioInfo>
 }

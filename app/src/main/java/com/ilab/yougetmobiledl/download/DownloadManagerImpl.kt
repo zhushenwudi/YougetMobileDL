@@ -143,6 +143,15 @@ object DownloadManagerImpl : DownloadManager {
                 }
             }
             eventVM.mutableDownloadTasks.postValue(tempList)
+            // 清理文件
+            AppUtil.getSDCardPath()?.let {
+                val files = FileUtils.listFilesInDir(it)
+                files.forEach { f ->
+                    if (f.absolutePath.contains(downloadInfo.name)) {
+                        FileUtils.deleteFile(f)
+                    }
+                }
+            }
         }
     }
 

@@ -55,7 +55,13 @@ class DownloadTaskImpl(
                         progressResponse(100)
                         if (res == "finish") {
                             manager.downloadSuccess(downloadInfo)
-                            convert()
+                            if (downloadInfo.type == 1) {
+                                // 视频需要转换格式
+                                convert()
+                            } else {
+                                // 音频默认生成的mp4，直接生成已下载实例
+                                generateDownloadedInfo()
+                            }
                         } else {
                             manager.downloadFail(downloadInfo)
                             resultResult.invoke(Pair(false, "文件下载失败"))
@@ -63,6 +69,43 @@ class DownloadTaskImpl(
                     }
                 }
             }
+        }
+    }
+
+    // 生成已下载实例
+    private fun generateDownloadedInfo() {
+        AppUtil.getSDCardPath()?.let {
+            // 生成已下载实例
+            val path = "$it/${downloadInfo.name}.mp4"
+            val pathLength = FileUtils.getFileLength(path).toDouble()
+            val info = DownloadedInfo(
+                name = downloadInfo.name,
+                path = path,
+                totalSize = FileUtils.formatByteMemorySize(2, pathLength),
+                url = downloadInfo.url,
+                photo = downloadInfo.pic,
+                type = downloadInfo.type
+            )
+
+            // 删除内存中的任务，从下载中数据库删除，写入已下载数据库
+            val downloads = mutableListOf<DownloadInfo>()
+            eventVM.mutableDownloadTasks.value?.let { it1 -> downloads.addAll(it1) }
+            val iterator = downloads.iterator()
+            while (iterator.hasNext()) {
+                val current = iterator.next()
+                if (current.url == downloadInfo.url) {
+                    iterator.remove()
+                    // 从 下载中 数据库删除
+                    dbController.delete(current)
+                    // 写入 已下载 数据库
+                    dbController.createOrUpdate(info)
+                    val downloadedList = eventVM.mutableDownloadedTasks.value
+                    downloadedList?.add(info)
+                    eventVM.mutableDownloadedTasks.postValue(downloadedList)
+                }
+            }
+            eventVM.mutableDownloadTasks.postValue(downloads)
+            resultResult.invoke(Pair(true, null))
         }
     }
 
@@ -117,34 +160,7 @@ class DownloadTaskImpl(
                         // 删除 flv 文件
                         FileUtils.deleteFile(src)
                         // 生成已下载实例
-                        val path = "$it/${downloadInfo.name}.mp4"
-                        val pathLength = FileUtils.getFileLength(path).toDouble()
-                        val info = DownloadedInfo(
-                            name = downloadInfo.name,
-                            path = path,
-                            totalSize = FileUtils.formatByteMemorySize(2, pathLength),
-                            url = downloadInfo.url,
-                            photo = downloadInfo.pic
-                        )
-                        // 删除内存中的任务，从下载中数据库删除，写入已下载数据库
-                        val downloads = mutableListOf<DownloadInfo>()
-                        eventVM.mutableDownloadTasks.value?.let { it1 -> downloads.addAll(it1) }
-                        val iterator = downloads.iterator()
-                        while (iterator.hasNext()) {
-                            val current = iterator.next()
-                            if (current.url == downloadInfo.url) {
-                                iterator.remove()
-                                // 从 下载中 数据库删除
-                                dbController.delete(current)
-                                // 写入 已下载 数据库
-                                dbController.createOrUpdate(info)
-                                val downloadedList = eventVM.mutableDownloadedTasks.value
-                                downloadedList?.add(info)
-                                eventVM.mutableDownloadedTasks.postValue(downloadedList)
-                            }
-                        }
-                        eventVM.mutableDownloadTasks.postValue(downloads)
-                        resultResult.invoke(Pair(true, null))
+                        generateDownloadedInfo()
                     } else {
                         val downloadList = eventVM.mutableDownloadTasks.value
                         downloadList?.forEach { info ->

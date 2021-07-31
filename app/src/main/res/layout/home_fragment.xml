@@ -22,7 +22,7 @@
             android:layout_marginHorizontal="58dp"
             android:background="@drawable/bg_input"
             android:gravity="top"
-            android:hint="请输入要下载的视频地址"
+            android:hint="请输入要下载的视频地址\n目前支持av、bv、ss、ep、au"
             android:minLines="5"
             android:padding="10dp"
             android:textColor="@color/black"
@@ -86,16 +86,6 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.7" />
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="短链接测试"
-            app:layout_constraintBottom_toBottomOf="@+id/btnDownload"
-            app:layout_constraintEnd_toStartOf="@+id/btnDownload"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/btnDownload" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

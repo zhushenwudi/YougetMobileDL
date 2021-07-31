@@ -46,12 +46,6 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
             )
         )
 
-        button.clickNoRepeat {
-//            mViewModel.handleURL("https://b23.tv/VkWj3j")
-            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ep409584")
-            loading.show()
-        }
-
         btnDownload.clickNoRepeat {
             requestPermission(
                 permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -62,8 +56,12 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             return@requestPermission
                         }
                         if (et.isEmpty()) {
-//                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
-                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ss38931")
+//                            mViewModel.handleURL("https://b23.tv/VkWj3j")
+//                            mViewModel.handleURL("https://www.bilibili.com/video/av170001")
+                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
+//                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ss38931")
+//                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ep409584")
+//                            mViewModel.handleURL("https://www.bilibili.com/audio/au2033663")
                         } else {
                             mViewModel.handleURL(et)
                         }
@@ -96,6 +94,9 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                     }
                     HomeViewModel.Status.PARSE_VIDEO_ERROR -> {
                         loading.refreshDetailLabel("解析视频资源...失败")
+                    }
+                    HomeViewModel.Status.PARSE_AUDIO_ERROR -> {
+                        loading.refreshDetailLabel("解析音频资源...失败")
                     }
                     HomeViewModel.Status.TIMEOUT_ERROR -> {
                         loading.refreshDetailLabel("请求超时")

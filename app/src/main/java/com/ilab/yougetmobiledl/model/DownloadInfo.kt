@@ -26,7 +26,8 @@ data class DownloadInfo(
     var format: String = "flv",
     var pic: String = "",
     var videoPart: Int = 1,
-    var hasPart: Boolean = false
+    var hasPart: Boolean = false,
+    var type: Int = 1, // 1: 视频 2: 音频
 ) : Parcelable, Comparable<DownloadInfo> {
     override fun compareTo(other: DownloadInfo): Int {
         return other.status - status

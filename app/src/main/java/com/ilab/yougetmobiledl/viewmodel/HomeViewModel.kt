@@ -23,6 +23,7 @@ class HomeViewModel : BaseViewModel() {
         FIND_VIDEO_INFO,
         FIND_VIDEO_ERROR,
         PARSE_VIDEO_ERROR,
+        PARSE_AUDIO_ERROR,
         TIMEOUT_ERROR,
         READY_FOR_DOWNLOAD,
         ALREADY_DOWNLOAD,
@@ -85,7 +86,10 @@ class HomeViewModel : BaseViewModel() {
             }
             url.matches(Regex(MATCH_AUDIO)) -> {
                 // 音频
-
+                url = url.substringBefore('?')
+                if (checkURL(url)) {
+                    getAudioInfo(url)
+                }
             }
             url.matches(Regex(MATCH_BANGUMI_SS)) -> {
                 // 番剧集，弹窗显示选择分P
@@ -120,9 +124,34 @@ class HomeViewModel : BaseViewModel() {
         }
         if (eventVM.mutableDownloadTasks.value?.any { it.url == url } == true) {
             postEvent(Status.ALREADY_DOWNLOAD)
-            return true
+            return false
         }
-        return false
+        return true
+    }
+
+    // 获取音频信息和流
+    private suspend fun getAudioInfo(url: String) {
+        val sid = url.getVideoKey("au").toInt()
+        try {
+            val audio = apiService.getAudioInfo(sid).await()
+            val audioStream = apiService.getAudioStream(sid).await()
+            if (audio.code == 0 && audioStream.code == 0) {
+                val info = DownloadInfo::class.java.newInstance()
+                info.type = 2
+                info.url = url
+                info.path = "${AppUtil.getSDCardPath()}/${info.name}.mp4"
+                audio.data.title?.let { info.name = it }
+                audio.data.cover?.let { info.pic = it }
+                audioStream.data.size?.let { info.totalSize = parseSize(it.toString()) }
+                postEvent(Status.READY_FOR_DOWNLOAD)
+                downloadInfo.postValue(info)
+            } else {
+                postEvent(Status.PARSE_AUDIO_ERROR)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            postEvent(Status.PARSE_AUDIO_ERROR)
+        }
     }
 
     // 获取AV/BV视频信息
@@ -131,15 +160,15 @@ class HomeViewModel : BaseViewModel() {
             apiService.getVideoInfo(bvid = bvid, aid = aid)
         }, {
             it.run {
-                val downloadInfo = DownloadInfo::class.java.newInstance()
-                downloadInfo.name = replaceWindows(title)
-                downloadInfo.bvid = bvid
-                downloadInfo.cid = cid
-                downloadInfo.videoPart = videos
-                downloadInfo.hasPart = hasPart
-                downloadInfo.pic = pic
-                downloadInfo.url = url
-                getHighDigitalStream(downloadInfo)
+                val info = DownloadInfo::class.java.newInstance()
+                info.name = replaceWindows(title)
+                info.bvid = bvid
+                info.cid = cid
+                info.videoPart = videos
+                info.hasPart = hasPart
+                info.pic = pic
+                info.url = url
+                getHighDigitalStream(info)
             }
         }, {
             postEvent(Status.PARSE_VIDEO_ERROR)
@@ -235,7 +264,7 @@ class HomeViewModel : BaseViewModel() {
     }
 
     private fun String.getVideoKey(after: String): String {
-        return substringAfter(after).substringBefore("?")
+        return substringBefore("?").substringAfterLast(after)
     }
 
     companion object {
