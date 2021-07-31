@@ -1,10 +1,8 @@
 package com.ilab.yougetmobiledl.network
 
-import com.ilab.yougetmobiledl.model.DualStream
-import com.ilab.yougetmobiledl.model.SplashPhoto
-import com.ilab.yougetmobiledl.model.VideoInfo
+import com.ilab.yougetmobiledl.model.*
 import okhttp3.ResponseBody
-import retrofit2.Response
+import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query
@@ -47,5 +45,21 @@ interface ApiService {
      * 判断视频地址是否有效
      */
     @GET
-    suspend fun getHasCurrentVideo(@Url url: String): Response<ResponseBody>
+    fun getHasCurrentVideo(@Url url: String): Call<ResponseBody>
+
+    @GET("/pgc/view/web/season")
+    fun getBangumiInfo(
+        @Query("season_id") seasonId: Int?,
+        @Query("ep_id") epId: Int?
+    ): Call<BangumiInfo>
+
+    /**
+     * 获取番剧高清视频流
+     */
+    @GET("/pgc/player/web/playurl")
+    fun getBangumiVideoStream(
+        @Query("ep_id") epId: Int,
+        @Query("otype") otype: String = "json",
+        @Query("qn") qn: Int = 112,
+    ): Call<BangumiDualStream>
 }

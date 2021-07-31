@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.chaquo.python.android.PyApplication
 import com.heima.easysp.SharedPreferencesUtils
+import com.ilab.yougetmobiledl.BuildConfig
 import com.ilab.yougetmobiledl.model.MyObjectBox
 import com.ilab.yougetmobiledl.viewmodel.MyEventVM
 import dev.DevUtils
+import dev.utils.LogPrintUtils
 import io.objectbox.BoxStore
 
 val eventVM by lazy { App.eventVM }
@@ -37,6 +39,8 @@ class App : PyApplication(), ViewModelStoreOwner {
         eventVM = getAppViewModelProvider().get(MyEventVM::class.java)
         boxStore = MyObjectBox.builder().androidContext(this).build()
         boxStore.startObjectBrowser(8090)
+
+        LogPrintUtils.setPrintLog(BuildConfig.DEBUG)
     }
 
     private fun getAppViewModelProvider(): ViewModelProvider {

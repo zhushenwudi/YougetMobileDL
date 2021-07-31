@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -26,6 +25,7 @@ import com.ilab.yougetmobiledl.ui.fragment.HomeFragment
 import com.ilab.yougetmobiledl.ui.fragment.VideoFragment
 import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.MainViewModel
+import dev.utils.LogPrintUtils
 import dev.utils.app.ScreenUtils.getStatusBarHeight
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         eventVM.globalToast.observe(this) {
             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
-            Log.e("aaa", it)
+            LogPrintUtils.e(it)
         }
     }
 

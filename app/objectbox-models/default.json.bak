@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:7013250790889530212",
-      "lastPropertyId": "14:7295427024628098232",
+      "lastPropertyId": "16:3841323565991303084",
       "name": "DownloadInfo",
       "properties": [
         {
@@ -73,14 +73,14 @@
           "flags": 4
         },
         {
-          "id": "13:5416696702070408760",
-          "name": "multiPageNum",
+          "id": "15:812178397621977324",
+          "name": "videoPart",
           "type": 5,
           "flags": 4
         },
         {
-          "id": "14:7295427024628098232",
-          "name": "hasPointPart",
+          "id": "16:3841323565991303084",
+          "name": "hasPart",
           "type": 1,
           "flags": 4
         }
@@ -88,38 +88,38 @@
       "relations": []
     },
     {
-      "id": "2:61474954672725524",
-      "lastPropertyId": "6:4350310683115126105",
-      "name": "VideoInfo",
+      "id": "3:3246980470679524839",
+      "lastPropertyId": "6:8123724912964215077",
+      "name": "DownloadedInfo",
       "properties": [
         {
-          "id": "1:8083024900892344102",
+          "id": "1:5506963860695680379",
           "name": "id",
           "type": 6,
           "flags": 1
         },
         {
-          "id": "2:7022686473523025112",
+          "id": "2:1645182329521286808",
           "name": "name",
           "type": 9
         },
         {
-          "id": "3:6160566263498724456",
+          "id": "3:8740550333086885444",
           "name": "path",
           "type": 9
         },
         {
-          "id": "4:6549333089017172007",
+          "id": "4:5296703933118670250",
           "name": "totalSize",
           "type": 9
         },
         {
-          "id": "5:6652523175207221903",
+          "id": "5:6302785899740549336",
           "name": "photo",
           "type": 9
         },
         {
-          "id": "6:4350310683115126105",
+          "id": "6:8123724912964215077",
           "name": "url",
           "type": 9
         }
@@ -127,15 +127,26 @@
       "relations": []
     }
   ],
-  "lastEntityId": "2:61474954672725524",
+  "lastEntityId": "3:3246980470679524839",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
-  "retiredEntityUids": [],
+  "retiredEntityUids": [
+    61474954672725524
+  ],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    8083024900892344102,
+    7022686473523025112,
+    6160566263498724456,
+    6549333089017172007,
+    6652523175207221903,
+    4350310683115126105,
+    5416696702070408760,
+    7295427024628098232
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

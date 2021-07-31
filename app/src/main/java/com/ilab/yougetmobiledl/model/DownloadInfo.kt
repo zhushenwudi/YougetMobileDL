@@ -14,8 +14,9 @@ data class DownloadInfo(
     var id: Long = 0,
 
     var name: String = "",
-    var bvid: String = "",
+    var bvid: String? = "",
     var cid: Int = 0,
+    var epid: Int = 0,
     var path: String = "",
     var totalSize: String = "",
     var percent: Int = 0,

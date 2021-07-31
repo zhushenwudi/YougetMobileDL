@@ -2,6 +2,7 @@ package com.ilab.yougetmobiledl.ui.fragment
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.os.Bundle
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
@@ -10,12 +11,14 @@ import com.ilab.yougetmobiledl.databinding.HomeFragmentBinding
 import com.ilab.yougetmobiledl.ext.clickNoRepeat
 import com.ilab.yougetmobiledl.ext.init
 import com.ilab.yougetmobiledl.ext.requestPermission
+import com.ilab.yougetmobiledl.model.Episode
 import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.HomeViewModel
 import com.ilab.yougetmobiledl.widget.MyProgress
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
+import dev.utils.app.DialogUtils
 import kotlinx.android.synthetic.main.home_fragment.*
 
 @SuppressLint("SetTextI18n")
@@ -43,40 +46,9 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
             )
         )
 
-        mViewModel.downloadStatus.observe(viewLifecycleOwner) {
-            it?.let {
-                when (it) {
-                    HomeViewModel.Status.FIND_VIDEO_INFO -> {
-                        loading.refreshDetailLabel("寻找视频资源...")
-                    }
-                    HomeViewModel.Status.FIND_VIDEO_ERROR -> {
-                        loading.refreshDetailLabel("寻找视频资源...失败")
-                    }
-                    HomeViewModel.Status.PARSE_VIDEO_ERROR -> {
-                        loading.refreshDetailLabel("解析视频资源...失败")
-                    }
-                    HomeViewModel.Status.TIMEOUT_ERROR -> {
-                        loading.refreshDetailLabel("请求超时")
-                    }
-                    HomeViewModel.Status.READY_FOR_DOWNLOAD -> {
-                        loading.refreshDetailLabel("解析完毕，准备下载")
-                    }
-                    HomeViewModel.Status.ALREADY_DOWNLOAD -> {
-                        loading.refreshDetailLabel("文件已在队列或已完成")
-                    }
-                    else -> {
-                        loading.dismiss()
-                    }
-                }
-            }
-        }
-
-        mViewModel.downloadInfo.observe(viewLifecycleOwner) {
-            (requireActivity() as MainActivity).add(it)
-        }
-
         button.clickNoRepeat {
-            mViewModel.getVideoList("https://b23.tv/VkWj3j")
+//            mViewModel.getVideoList("https://b23.tv/VkWj3j")
+            mViewModel.getVideoList("https://www.bilibili.com/bangumi/play/ep409584")
             loading.show()
         }
 
@@ -106,5 +78,75 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                 }
             )
         }
+    }
+
+    override fun createObserver() {
+        mViewModel.downloadInfo.observe(viewLifecycleOwner) {
+            (requireActivity() as MainActivity).add(it)
+        }
+
+        mViewModel.downloadStatus.observe(viewLifecycleOwner) {
+            it?.let {
+                when (it) {
+                    HomeViewModel.Status.FIND_VIDEO_INFO -> {
+                        loading.refreshDetailLabel("寻找视频资源...")
+                    }
+                    HomeViewModel.Status.FIND_VIDEO_ERROR -> {
+                        loading.refreshDetailLabel("寻找视频资源...失败")
+                    }
+                    HomeViewModel.Status.PARSE_VIDEO_ERROR -> {
+                        loading.refreshDetailLabel("解析视频资源...失败")
+                    }
+                    HomeViewModel.Status.TIMEOUT_ERROR -> {
+                        loading.refreshDetailLabel("请求超时")
+                    }
+                    HomeViewModel.Status.READY_FOR_DOWNLOAD -> {
+                        loading.refreshDetailLabel("解析完毕，准备下载")
+                    }
+                    HomeViewModel.Status.ALREADY_DOWNLOAD -> {
+                        loading.refreshDetailLabel("文件已在队列或已完成")
+                    }
+                    HomeViewModel.Status.ONLY_VIP -> {
+                        loading.refreshDetailLabel("需要大会员才能下载")
+                    }
+                    else -> {
+                        loading.dismiss()
+                    }
+                }
+            }
+        }
+
+        mViewModel.chooseEP.observe(viewLifecycleOwner) { bangumi ->
+            val items = mutableListOf<String>()
+            val episodes = bangumi.episodes
+            val checkedItems = mutableListOf<Boolean>()
+            episodes.forEach { ep ->
+                items.add("第${ep.title}话 ${ep.long_title}")
+                checkedItems.add(false)
+            }
+            DialogUtils.createMultiChoiceDialog(
+                requireContext(),
+                items.toTypedArray(),
+                checkedItems.toBooleanArray(),
+                bangumi.season_title,
+                null,
+                "下载",
+                object : DialogUtils.MultiChoiceListener() {
+                    override fun onPositiveButton(
+                        dialog: DialogInterface?,
+                        checkedItems: BooleanArray
+                    ) {
+                        val chooseList = mutableListOf<Episode>()
+                        checkedItems.forEachIndexed { index, isChoose ->
+                            if (isChoose) {
+                                chooseList.add(episodes[index])
+                            }
+                        }
+                        mViewModel.getBangumiHighDigitalStream(chooseList)
+                    }
+                }
+            ).show()
+        }
+
     }
 }

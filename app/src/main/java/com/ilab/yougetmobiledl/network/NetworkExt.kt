@@ -1,12 +1,12 @@
 package com.ilab.yougetmobiledl.network
 
 import android.net.ParseException
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonParseException
 import com.google.gson.stream.MalformedJsonException
 import com.ilab.yougetmobiledl.base.BaseViewModel
 import com.ilab.yougetmobiledl.base.eventVM
+import dev.utils.LogPrintUtils
 import kotlinx.coroutines.*
 import org.apache.http.conn.ConnectTimeoutException
 import org.json.JSONException
@@ -125,7 +125,7 @@ suspend fun <T> executeResponse(
                 success(response.getRespData())
             }
             else -> {
-                response.getRespMsg()?.let { Log.e("aaa", it) }
+                response.getRespMsg()?.let { LogPrintUtils.e(it) }
                 throw Throwable(response.getRespMsg())
             }
         }

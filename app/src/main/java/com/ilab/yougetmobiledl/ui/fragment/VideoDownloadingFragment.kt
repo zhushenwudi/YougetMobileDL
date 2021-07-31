@@ -18,8 +18,6 @@ import com.ilab.yougetmobiledl.viewmodel.VideoDownloadingViewModel
 import com.ilab.yougetmobiledl.widget.MyDiyDecoration
 import com.ilab.yougetmobiledl.widget.MyLinearLayoutManager
 import com.mcxtzhang.swipemenulib.SwipeMenuLayout
-import dev.utils.app.ClipboardUtils
-import dev.utils.app.toast.ToastUtils
 import kotlinx.android.synthetic.main.video_download_fragment.*
 
 class VideoDownloadingFragment :
@@ -60,8 +58,7 @@ class VideoDownloadingFragment :
 
         mAdapter.setOnItemChildLongClickListener { adapter, _, position ->
             val info = adapter.getItem(position) as DownloadInfo
-            ClipboardUtils.copyText(info.url)
-            ToastUtils.showLong("URL地址已复制")
+            // TODO: 视频展示页
             true
         }
 

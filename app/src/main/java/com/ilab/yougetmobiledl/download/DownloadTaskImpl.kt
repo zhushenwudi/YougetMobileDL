@@ -1,6 +1,5 @@
 package com.ilab.yougetmobiledl.download
 
-import android.util.Log
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.chaquo.python.Python
@@ -119,11 +118,11 @@ class DownloadTaskImpl(
                         FileUtils.deleteFile(src)
                         // 生成已下载实例
                         val path = "$it/${downloadInfo.name}.mp4"
-
+                        val pathLength = FileUtils.getFileLength(path).toDouble()
                         val info = DownloadedInfo(
                             name = downloadInfo.name,
                             path = path,
-                            totalSize = FileUtils.getFileSize(path),
+                            totalSize = FileUtils.formatByteMemorySize(2, pathLength),
                             url = downloadInfo.url,
                             photo = downloadInfo.pic
                         )
@@ -160,9 +159,7 @@ class DownloadTaskImpl(
                         }
                         resultResult.invoke(Pair(false, "格式转换失败"))
                     }
-                }, { log ->
-                    Log.d("aaa", log.message)
-                }) {}
+                }, {}) {}
         }
     }
 

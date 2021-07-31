@@ -2,7 +2,7 @@ package com.ilab.yougetmobiledl.ext
 
 import android.util.Log
 
-const val TAG = "aaa"
+const val TAG = "you-get"
 
 /**
  *

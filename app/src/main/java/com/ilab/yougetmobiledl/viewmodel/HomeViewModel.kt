@@ -1,6 +1,5 @@
 package com.ilab.yougetmobiledl.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.ilab.yougetmobiledl.base.BaseViewModel
@@ -10,7 +9,10 @@ import com.ilab.yougetmobiledl.network.apiService
 import com.ilab.yougetmobiledl.network.request
 import com.ilab.yougetmobiledl.network.requestNoCheck
 import com.ilab.yougetmobiledl.utils.AppUtil
+import dev.utils.LogPrintUtils
 import kotlinx.coroutines.*
+import retrofit2.await
+import retrofit2.awaitResponse
 
 class HomeViewModel : BaseViewModel() {
     enum class Status {
@@ -20,11 +22,13 @@ class HomeViewModel : BaseViewModel() {
         TIMEOUT_ERROR,
         READY_FOR_DOWNLOAD,
         ALREADY_DOWNLOAD,
+        ONLY_VIP,
         CLOSE_DIALOG
     }
 
     val downloadStatus = MutableLiveData(Status.CLOSE_DIALOG)
     val downloadInfo = MutableLiveData<DownloadInfo>()
+    val chooseEP = MutableLiveData<Bangumi>()
 
     fun getVideoList(url: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -38,18 +42,16 @@ class HomeViewModel : BaseViewModel() {
                 return@launch
             }
 
-            // 没有继续走
             try {
                 withTimeout(10000) {
                     downloadStatus.postValue(Status.FIND_VIDEO_INFO)
-                    requestNoCheck({
-                        apiService.getHasCurrentVideo(url)
-                    }, {
-                        val rawUrl = it.raw().request().url().toString()
-                        checkPlatform(rawUrl)
-                    }, {
+                    try {
+                        val html = apiService.getHasCurrentVideo(url).awaitResponse()
+                        checkPlatform(html.raw().request().url().toString())
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                         postEvent(Status.FIND_VIDEO_ERROR)
-                    })
+                    }
                 }
             } catch (e: TimeoutCancellationException) {
                 postEvent(Status.TIMEOUT_ERROR)
@@ -57,8 +59,7 @@ class HomeViewModel : BaseViewModel() {
         }
     }
 
-    private fun checkPlatform(rawUrl: String) {
-        Log.e("aaa", "rawUrl: $rawUrl")
+    private suspend fun checkPlatform(rawUrl: String) {
         var url = rawUrl.replace("m.bilibili.com", "www.bilibili.com")
         var hasPart = false
         if ('?' in rawUrl) {
@@ -69,60 +70,70 @@ class HomeViewModel : BaseViewModel() {
                 paramsMap["p"]?.let { url += ("?p=$it") }
             }
         }
-        Log.e("aaa", url)
+        LogPrintUtils.e(url)
         when {
-            "bilibili.com" in url -> {
-                // b站长链
-                when {
-                    "av" in url -> {
-                        // av视频
-                        getVideoInfo(
-                            url = url,
-                            aid = url.getVideoKey().toInt(),
-                            bvid = null,
-                            hasPart = hasPart
-                        )
-                    }
-                    "BV" in url -> {
-                        // bv视频
-                        getVideoInfo(
-                            url = url,
-                            aid = null,
-                            bvid = url.getVideoKey(),
-                            hasPart = hasPart
-                        )
-                    }
-                    else -> {
-                        // 其他
-                        val downloadInfo = DownloadInfo::class.java.newInstance()
-                        downloadInfo.url = url
-                    }
-                }
+            url.matches(Regex(MATCH_AV)) -> {
+                getVideoInfo(
+                    url = url,
+                    aid = url.getVideoKey("av").toInt(),
+                    bvid = null,
+                    hasPart = hasPart
+                )
+            }
+            url.matches(Regex(MATCH_BV)) -> {
+                // BV
+                getVideoInfo(
+                    url = url,
+                    aid = null,
+                    bvid = url.getVideoKey("BV"),
+                    hasPart = hasPart
+                )
+            }
+            url.matches(Regex(MATCH_AUDIO)) -> {
+                // 音频
+            }
+            url.matches(Regex(MATCH_BANGUMI_SS)) -> {
+                // 番剧集，弹窗显示选择分P
+                getBangumiInfo(
+                    seasonId = url.getVideoKey("ss").toInt(),
+                    epId = null
+                )
+            }
+            url.matches(Regex(MATCH_BANGUMI_EP)) -> {
+                // 单集番剧
+                getBangumiInfo(
+                    seasonId = null,
+                    epId = url.getVideoKey("ep").toInt()
+                )
             }
             else -> {
-                // 其他平台视频
+
             }
         }
     }
 
+    // 获取AV/BV视频信息
     private fun getVideoInfo(url: String, aid: Int?, bvid: String?, hasPart: Boolean = false) {
         request({
             apiService.getVideoInfo(bvid = bvid, aid = aid)
         }, {
-            val downloadInfo = DownloadInfo::class.java.newInstance()
-            downloadInfo.name = replaceWindows(it.title)
-            downloadInfo.bvid = it.bvid
-            downloadInfo.cid = it.cid
-            downloadInfo.videoPart = it.videos
-            downloadInfo.hasPart = hasPart
-            downloadInfo.pic = it.pic
-            downloadInfo.url = url
-            getHighDigitalStream(downloadInfo)
+            it.run {
+                val downloadInfo = DownloadInfo::class.java.newInstance()
+                downloadInfo.name = replaceWindows(title)
+                downloadInfo.bvid = bvid
+                downloadInfo.cid = cid
+                downloadInfo.videoPart = videos
+                downloadInfo.hasPart = hasPart
+                downloadInfo.pic = pic
+                downloadInfo.url = url
+                getHighDigitalStream(downloadInfo)
+            }
         }, {
             postEvent(Status.PARSE_VIDEO_ERROR)
         })
     }
 
+    // 获取AV/BV高清视频流
     private fun getHighDigitalStream(info: DownloadInfo) {
         requestNoCheck({
             apiService.getHighDigitalVideoStream(cid = info.cid)
@@ -132,11 +143,63 @@ class HomeViewModel : BaseViewModel() {
                 info.totalSize = parseSize(it.durl[0].size.toString())
                 postEvent(Status.READY_FOR_DOWNLOAD)
                 downloadInfo.postValue(info)
-                Log.d("aaa", info.toString())
             } else {
                 postEvent(Status.PARSE_VIDEO_ERROR)
             }
         })
+    }
+
+    // 获取番剧视频信息
+    private suspend fun getBangumiInfo(seasonId: Int?, epId: Int?) {
+        try {
+            val bangumi = apiService.getBangumiInfo(seasonId, epId).await()
+            if (bangumi.code == 0) {
+                if (seasonId != null) {
+                    bangumi.result?.run { chooseEP.postValue(this) }
+                    downloadStatus.postValue(Status.CLOSE_DIALOG)
+                } else {
+                    bangumi.result?.episodes
+                        ?.filter { ep -> ep.id == epId }
+                        ?.let { getBangumiHighDigitalStream(it) }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            postEvent(Status.PARSE_VIDEO_ERROR)
+        }
+    }
+
+    // 获取番剧高清视频流
+    fun getBangumiHighDigitalStream(episodes: List<Episode>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            episodes.forEach { ep ->
+                try {
+                    val dualStream = apiService.getBangumiVideoStream(ep.id).await()
+                    if (dualStream.isSuccess() && dualStream.result != null) {
+                        val info = DownloadInfo::class.java.newInstance()
+                        info.name = replaceWindows(ep.long_title)
+                        info.epid = ep.id
+                        info.videoPart = episodes.size
+                        info.hasPart = true
+                        info.pic = ep.cover
+                        info.url = ep.share_url
+                        info.path =
+                            "${AppUtil.getSDCardPath()}/${info.name}.${dualStream.result.format}"
+                        info.totalSize = parseSize(dualStream.result.durl[0].size.toString())
+                        postEvent(Status.READY_FOR_DOWNLOAD)
+                        downloadInfo.postValue(info)
+                    } else {
+                        if (dualStream.message == "大会员专享限制") {
+                            postEvent(Status.ONLY_VIP)
+                        } else {
+                            postEvent(Status.PARSE_VIDEO_ERROR)
+                        }
+                    }
+                } catch (e: Exception) {
+                    postEvent(Status.PARSE_VIDEO_ERROR)
+                }
+            }
+        }
     }
 
     private fun parseSize(value: String): String {
@@ -158,7 +221,15 @@ class HomeViewModel : BaseViewModel() {
             .replace("|", "-").replace(" ", "")
     }
 
-    private fun String.getVideoKey(): String {
-        return substringAfter("video/").substringBefore("?")
+    private fun String.getVideoKey(after: String): String {
+        return substringAfter(after).substringBefore("?")
+    }
+
+    companion object {
+        const val MATCH_AV = "https?://(www\\.)?bilibili\\.com/video/(av(\\d+))"
+        const val MATCH_BV = "https?://(www\\.)?bilibili\\.com/video/(BV(\\S+))"
+        const val MATCH_AUDIO = "https?://(www\\.)?bilibili\\.com/audio/au(\\d+)"
+        const val MATCH_BANGUMI_SS = "https?://(www\\.)?bilibili\\.com/bangumi/play/ss(\\d+)"
+        const val MATCH_BANGUMI_EP = "https?://(www\\.)?bilibili\\.com/bangumi/play/ep(\\d+)"
     }
 }

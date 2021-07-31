@@ -3,9 +3,9 @@ package com.ilab.yougetmobiledl.utils
 import android.annotation.SuppressLint
 import android.os.Environment
 import android.provider.Settings
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dev.utils.LogPrintUtils
 import dev.utils.app.PathUtils
 import dev.utils.app.ResourceUtils.getContentResolver
 import kotlinx.coroutines.*
@@ -90,7 +90,7 @@ object AppUtil {
             .filter { filter.invoke(it) }
             .distinctUntilChanged()
             .flatMapLatest { flatMap.invoke(it) }
-            .catch { Log.e("aaa", "${it.message}") }
+            .catch { LogPrintUtils.e("${it.message}") }
             .flowOn(Dispatchers.Default)
             .onEach { onResult.invoke(it) }
             .flowOn(Dispatchers.Main)
