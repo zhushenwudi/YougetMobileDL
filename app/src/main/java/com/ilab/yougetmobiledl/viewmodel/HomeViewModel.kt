@@ -27,6 +27,7 @@ class HomeViewModel : BaseViewModel() {
         TIMEOUT_ERROR,
         READY_FOR_DOWNLOAD,
         ALREADY_DOWNLOAD,
+        NOT_SUPPORT,
         ONLY_VIP,
         CLOSE_DIALOG
     }
@@ -39,8 +40,20 @@ class HomeViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             downloadStatus.postValue(Status.FIND_VIDEO_INFO)
             try {
-                val html = apiService.getHasCurrentVideo(url).awaitResponse()
-                checkPlatform(html.raw().request().url().toString())
+                if ("b23.tv" in url || "bilibili.com" in url) {
+                    val html = apiService.getHasCurrentVideo(url).awaitResponse()
+                    parseBilibili(html.raw().request().url().toString())
+                } else if ("youku.com" in url) {
+                    val info = DownloadInfo::class.java.newInstance()
+                    info.url = url
+                    info.type = 3
+                    info.name = url.substringAfter("id_").substringBefore("==.html")
+                    info.path = "${AppUtil.getSDCardPath()}/${info.name}.mp4"
+                    downloadInfo.postValue(info)
+                    postEvent(Status.READY_FOR_DOWNLOAD)
+                } else {
+                    postEvent(Status.NOT_SUPPORT)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 postEvent(Status.FIND_VIDEO_ERROR)
@@ -48,8 +61,8 @@ class HomeViewModel : BaseViewModel() {
         }
     }
 
-    private suspend fun checkPlatform(rawUrl: String) {
-        var url = rawUrl.replace("m.bilibili.com", "www.bilibili.com")
+    private suspend fun parseBilibili(rawURL: String) {
+        var url = rawURL.replace("https://m.", "https://www.")
         var hasPart = false
         if ('?' in url) {
             val paramsMap = AppUtil.getUrlParamsMap(url)
@@ -108,9 +121,6 @@ class HomeViewModel : BaseViewModel() {
                         epId = url.getVideoKey("ep").toInt()
                     )
                 }
-            }
-            else -> {
-
             }
         }
         LogPrintUtils.e(url)
@@ -246,7 +256,7 @@ class HomeViewModel : BaseViewModel() {
 
     private fun parseSize(value: String): String {
         val mb = value.toDouble() / (1024 * 1024)
-        return "%.2f".format(mb) + " MB"
+        return "%.2f".format(mb) + "MB"
     }
 
     private fun postEvent(status: Status) {

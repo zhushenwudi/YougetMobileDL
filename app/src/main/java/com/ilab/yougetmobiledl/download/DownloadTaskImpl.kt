@@ -10,6 +10,8 @@ import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_CONVERT_FAIL
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.app.ShellUtils
+import dev.utils.app.image.BitmapUtils
+import dev.utils.app.image.ImageUtils
 import dev.utils.common.FileUtils
 import kotlinx.coroutines.*
 import kotlin.math.round
@@ -55,12 +57,24 @@ class DownloadTaskImpl(
                         progressResponse(100)
                         if (res == "finish") {
                             manager.downloadSuccess(downloadInfo)
-                            if (downloadInfo.type == 1) {
-                                // 视频需要转换格式
-                                convert()
-                            } else {
-                                // 音频默认生成的mp4，直接生成已下载实例
-                                generateDownloadedInfo()
+                            when (downloadInfo.type) {
+                                1 -> {
+                                    // B站视频 flv -> mp4
+                                    convert()
+                                }
+                                2 -> {
+                                    // B站音频默认生成的mp4，直接生成已下载实例
+                                    generateDownloadedInfo()
+                                }
+                                3 -> {
+                                    // 优酷视频获取封面
+                                    val bitmap = BitmapUtils.getVideoThumbnail(downloadInfo.path)
+                                    val photo =
+                                        "${AppUtil.getSDCardPath()}/temp/${downloadInfo.name}.png"
+                                    ImageUtils.saveBitmapToSDCardPNG(bitmap, photo)
+                                    bitmap.recycle()
+                                    generateDownloadedInfo("file://$photo")
+                                }
                             }
                         } else {
                             manager.downloadFail(downloadInfo)
@@ -73,7 +87,7 @@ class DownloadTaskImpl(
     }
 
     // 生成已下载实例
-    private fun generateDownloadedInfo() {
+    private fun generateDownloadedInfo(photo: String = downloadInfo.pic) {
         AppUtil.getSDCardPath()?.let {
             // 生成已下载实例
             val path = "$it/${downloadInfo.name}.mp4"
@@ -83,7 +97,7 @@ class DownloadTaskImpl(
                 path = path,
                 totalSize = FileUtils.formatByteMemorySize(2, pathLength),
                 url = downloadInfo.url,
-                photo = downloadInfo.pic,
+                photo = photo,
                 type = downloadInfo.type
             )
 

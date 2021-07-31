@@ -22,7 +22,13 @@ class DownloadAdapter :
 
     override fun convert(holder: BaseViewHolder, item: DownloadInfo) {
         holder.setText(R.id.name, item.name)
-        Picasso.get().load(item.pic).fit().into(holder.itemView.findViewById<ImageView>(R.id.photo))
+        if (item.pic.isNotEmpty()) {
+            Picasso.get().load(item.pic).fit()
+                .into(holder.itemView.findViewById<ImageView>(R.id.photo))
+        } else {
+            Picasso.get().load(R.drawable.icon_holder).fit()
+                .into(holder.itemView.findViewById<ImageView>(R.id.photo))
+        }
         holder.setText(R.id.totalSize, item.totalSize)
         setStatus(holder, item)
         holder.setGone(R.id.btnDel, item.status == STATUS_DOWNLOADING)

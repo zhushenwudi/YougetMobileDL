@@ -22,7 +22,7 @@
             android:layout_marginHorizontal="58dp"
             android:background="@drawable/bg_input"
             android:gravity="top"
-            android:hint="请输入要下载的视频地址\n目前支持av、bv、ss、ep、au"
+            android:hint="请输入要下载的视频地址\n目前支持:\nB站av、bv、ss、ep、au\n优酷id_xxxxx==.html"
             android:minLines="5"
             android:padding="10dp"
             android:textColor="@color/black"
@@ -72,6 +72,19 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.4004825" />
+
+        <cpf.marqueeview.MarqueeView
+            android:id="@+id/marqueeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/banner"
+            android:background="@color/tianyi"
+            app:textColor="@color/white"
+            app:textSize="16sp" />
+
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline3"

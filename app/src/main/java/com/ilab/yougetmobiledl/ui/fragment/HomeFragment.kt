@@ -3,6 +3,8 @@ package com.ilab.yougetmobiledl.ui.fragment
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.DialogInterface
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
@@ -19,7 +21,9 @@ import com.ilab.yougetmobiledl.widget.MyProgress
 import com.youth.banner.Banner
 import com.youth.banner.adapter.BannerImageAdapter
 import dev.utils.app.DialogUtils
+import dev.utils.app.toast.ToastUtils
 import kotlinx.android.synthetic.main.home_fragment.*
+
 
 @SuppressLint("SetTextI18n")
 class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
@@ -46,6 +50,16 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
             )
         )
 
+        marqueeText.setOnItemClickListener {
+            val uri = Uri.parse("https://github.com/zhushenwudi/you-get")
+            val intent = Intent()
+            intent.action = "android.intent.action.VIEW"
+            intent.data = uri
+            startActivity(intent)
+        }
+
+        marqueeText.bindToLifeCycle(lifecycle)
+
         btnDownload.clickNoRepeat {
             requestPermission(
                 permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -56,16 +70,20 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             return@requestPermission
                         }
                         if (et.isEmpty()) {
+                            ToastUtils.showLong("请先输入媒体网路地址")
 //                            mViewModel.handleURL("https://b23.tv/VkWj3j")
 //                            mViewModel.handleURL("https://www.bilibili.com/video/av170001")
-                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
+//                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
 //                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ss38931")
 //                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ep409584")
 //                            mViewModel.handleURL("https://www.bilibili.com/audio/au2033663")
+//                            mViewModel.handleURL("https://v.youku.com/v_show/id_XNDM3ODM0OTI5Ng==.html")
+//                            mViewModel.handleURL("https://v.youku.com/v_show/id_XNTE4NDMzNTY2NA==.html")
+//                            mViewModel.handleURL("https://www.bilibili.com/audio/au457094") // lrc bug
                         } else {
+                            loading.show()
                             mViewModel.handleURL(et)
                         }
-                        loading.show()
                     }
                 },
                 onRationale = {
@@ -76,6 +94,14 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                 }
             )
         }
+    }
+
+    override fun initData() {
+        val arr = arrayListOf<String>()
+        arr.add("本软件不收取任何费用，欢迎大家来star")
+        arr.add("https://github.com/zhushenwudi/you-get")
+        arr.add("联系QQ  404288461")
+        marqueeText.setText(arr)
     }
 
     override fun createObserver() {
@@ -109,6 +135,9 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                     }
                     HomeViewModel.Status.ONLY_VIP -> {
                         loading.refreshDetailLabel("需要大会员才能下载")
+                    }
+                    HomeViewModel.Status.NOT_SUPPORT -> {
+                        loading.refreshDetailLabel("该视频暂不支持下载")
                     }
                     else -> {
                         loading.dismiss()
@@ -148,6 +177,5 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                 }
             ).show()
         }
-
     }
 }

@@ -6,7 +6,9 @@ import okhttp3.Response
 
 object URLConstant {
     const val BASE_URL = "https://api.bilibili.com/"
+    const val BASE_SPLASH_URL = "https://app.bilibili.com/"
     const val BASE_INTERFACE_URL = "https://interface.bilibili.com/"
+    const val SPLASH = "splash"
     const val INTERFACE = "interface"
     const val DOMAIN = "domain"
 }
@@ -31,6 +33,9 @@ class ChangeBaseUrlInterceptor : Interceptor {
             val newBaseUrl: HttpUrl? = when (headerValues[0]) {
                 URLConstant.INTERFACE -> {
                     HttpUrl.parse(URLConstant.BASE_INTERFACE_URL)
+                }
+                URLConstant.SPLASH -> {
+                    HttpUrl.parse(URLConstant.BASE_SPLASH_URL)
                 }
                 else -> {
                     HttpUrl.parse(URLConstant.BASE_URL)

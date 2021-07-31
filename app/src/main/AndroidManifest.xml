@@ -24,7 +24,7 @@
             android:value="true" />
 
         <activity
-            android:name="com.ilab.yougetmobiledl.ui.activity.MainActivity"
+            android:name=".ui.activity.SplashActivity"
             android:screenOrientation="portrait"
             android:fitsSystemWindows="true">
             <intent-filter>
@@ -33,6 +33,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.ilab.yougetmobiledl.ui.activity.MainActivity"
+            android:screenOrientation="portrait"
+            android:fitsSystemWindows="true" />
 
         <service
             android:name=".service.DownloadService"

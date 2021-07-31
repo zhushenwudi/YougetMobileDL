@@ -12,12 +12,13 @@ interface ApiService {
     /**
      * 获取开屏图片
      */
+    @Headers("domain:splash")
     @GET("/x/v2/splash/brand/list")
-    suspend fun getSplashPhoto(
+    fun getSplashPhoto(
         @Query("appkey") appkey: String = "1d8b6e7d45233436",
-        @Query("ts") ts: Int = 0,
-        @Query("sign") sign: String = "78a89e153cd6231a4a4d55013aa063ce"
-    ): ApiResponse<SplashPhoto>
+        @Query("ts") ts: Long = System.currentTimeMillis() / 1000,
+        @Query("sign") sign: String = ""
+    ): Call<ApiResponse<SplashPhoto>>
 
     /**
      * 获取高清视频流信息

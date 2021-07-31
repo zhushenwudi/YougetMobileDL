@@ -8,6 +8,8 @@ import java.util.*
 class AddParameterInterceptor : Interceptor {
     companion object {
         const val STREAM_SIGN = "aHRmhWMLkdeMuILqORnYZocwMBpMEOdt"
+        const val NORMAL_SIGN = "560c52ccd288fed045859ed18bffd973"
+        const val LOGIN_SIGN = "60698ba2f68e01ce44738920a0ffe768"
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -21,7 +23,10 @@ class AddParameterInterceptor : Interceptor {
         // 获取所有的键
         val keyList = oldHttpUrl.queryParameterNames()
 
-        if (request.method() == "GET" && keyList.contains("sign")) {
+
+        if (request.method() == "GET" && keyList.contains("sign")
+            && oldHttpUrl.queryParameter("sign")?.isEmpty() == true
+        ) {
             // 构建前面字段
             val sign = mutableListOf<String>()
 
@@ -41,9 +46,16 @@ class AddParameterInterceptor : Interceptor {
             sign.forEach {
                 params.add(it)
             }
-            val md5 = EncryptUtils.encryptMD5ToHexString(params.toString() + STREAM_SIGN)
+            val signKey = when (oldHttpUrl.queryParameter("appkey")) {
+                "1d8b6e7d45233436" -> NORMAL_SIGN
+                "iVGUTjsxvpLeuDCf" -> STREAM_SIGN
+                else -> LOGIN_SIGN
+            }
+
+            val md5 = EncryptUtils.encryptMD5ToHexString(params.toString() + signKey)
 
             val url = oldHttpUrl.newBuilder()
+                .removeAllQueryParameters("sign")
                 .addQueryParameter("sign", md5)
                 .build()
 
