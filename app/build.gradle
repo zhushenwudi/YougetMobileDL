@@ -35,7 +35,8 @@ android {
         }
 
         ndk {
-            abiFilters "armeabi-v7a", "x86"
+            abiFilters "armeabi-v7a"
+//            abiFilters "armeabi-v7a", "x86"
         }
     }
 
@@ -53,9 +54,9 @@ android {
         }
 
         release {
-            minifyEnabled true //开启混淆
-            shrinkResources true
-            zipAlignEnabled true //去除无用资源
+            minifyEnabled false //开启混淆
+            shrinkResources false
+            zipAlignEnabled false //去除无用资源
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
