@@ -2,10 +2,13 @@ package com.ilab.yougetmobiledl.ui.activity
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraph
@@ -28,6 +31,7 @@ import com.ilab.yougetmobiledl.viewmodel.MainViewModel
 import dev.utils.LogPrintUtils
 import dev.utils.app.ScreenUtils.getStatusBarHeight
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
 
 @SuppressLint("SetTextI18n")
 class MainActivity : AppCompatActivity() {
@@ -153,5 +157,29 @@ class MainActivity : AppCompatActivity() {
         } else {
             startService(mIntent)
         }
+    }
+
+    fun toSelfSetting() {
+        val mIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        mIntent.data = Uri.fromParts("package", packageName, null)
+        startActivity(mIntent)
+    }
+
+    fun jumpToGithub() {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse("https://github.com/zhushenwudi/YougetMobileDL")
+        startActivity(intent)
+    }
+
+    fun playMedia(file: File) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+        val contentUri = FileProvider.getUriForFile(
+            this,
+            "$packageName.FileProvider",
+            file
+        )
+        intent.setDataAndType(contentUri, "video/*")
+        startActivity(intent)
     }
 }

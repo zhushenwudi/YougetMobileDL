@@ -3,8 +3,6 @@ package com.ilab.yougetmobiledl.ui.fragment
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.DialogInterface
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
@@ -24,10 +22,9 @@ import dev.utils.app.DialogUtils
 import dev.utils.app.toast.ToastUtils
 import kotlinx.android.synthetic.main.home_fragment.*
 
-
 @SuppressLint("SetTextI18n")
 class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
-
+    private val activity by lazy { requireActivity() as MainActivity }
     private val loading by lazy {
         MyProgress.create(requireContext())
             .setLabel("请稍候")
@@ -51,11 +48,7 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
         )
 
         marqueeText.setOnItemClickListener {
-            val uri = Uri.parse("https://github.com/zhushenwudi/you-get")
-            val intent = Intent()
-            intent.action = "android.intent.action.VIEW"
-            intent.data = uri
-            startActivity(intent)
+            activity.jumpToGithub()
         }
 
         marqueeText.bindToLifeCycle(lifecycle)
@@ -85,12 +78,6 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                             mViewModel.handleURL(et)
                         }
                     }
-                },
-                onRationale = {
-                    eventVM.globalToast.postValue("您拒绝了权限")
-                },
-                onDeny = {
-                    eventVM.globalToast.postValue("您即将前往设置菜单，并请授权")
                 }
             )
         }
@@ -99,14 +86,14 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
     override fun initData() {
         val arr = arrayListOf<String>()
         arr.add("本软件不收取任何费用，欢迎大家来star")
-        arr.add("https://github.com/zhushenwudi/you-get")
+        arr.add("https://github.com/zhushenwudi/YougetMobileDL")
         arr.add("联系QQ  404288461")
         marqueeText.setText(arr)
     }
 
     override fun createObserver() {
         mViewModel.downloadInfo.observe(viewLifecycleOwner) {
-            (requireActivity() as MainActivity).add(it)
+            activity.add(it)
         }
 
         mViewModel.downloadStatus.observe(viewLifecycleOwner) {

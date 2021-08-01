@@ -3,11 +3,17 @@ package com.ilab.yougetmobiledl.ext
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.ftd.livepermissions.LivePermissions
 import com.ftd.livepermissions.PermissionResult
 import com.google.android.material.tabs.TabLayout
+import com.ilab.yougetmobiledl.base.eventVM
+import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
 import dev.utils.app.toast.ToastUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.system.exitProcess
 
@@ -38,13 +44,22 @@ fun Fragment.requestPermission(
         .observe(viewLifecycleOwner) {
             when (it) {
                 is PermissionResult.Grant -> {
+                    eventVM.isGrantedPermission.value = true
                     onGrant.invoke()
                 }
                 is PermissionResult.Rationale -> {
+                    eventVM.globalToast.postValue("您拒绝了权限")
+                    eventVM.isGrantedPermission.value = false
                     onRationale.invoke()
                 }
                 is PermissionResult.Deny -> {
+                    eventVM.globalToast.postValue("您即将前往设置菜单，并请授权")
+                    eventVM.isGrantedPermission.value = false
                     onDeny.invoke()
+                    lifecycleScope.launch(Dispatchers.Default) {
+                        delay(2000)
+                        (activity as MainActivity).toSelfSetting()
+                    }
                 }
             }
         }

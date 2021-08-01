@@ -6,6 +6,8 @@ import com.ilab.yougetmobiledl.model.DownloadInfo
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 
 class MyEventVM : BaseViewModel() {
+    val isGrantedPermission = EventMutableLiveData<Boolean>()
+
     // 用于视图更新的下载中视频列表
     val mutableDownloadTasks = EventMutableLiveData<MutableList<DownloadInfo>>()
 
@@ -19,5 +21,6 @@ class MyEventVM : BaseViewModel() {
     init {
         mutableDownloadTasks.value = mutableListOf()
         mutableDownloadedTasks.value = mutableListOf()
+        isGrantedPermission.value = false
     }
 }

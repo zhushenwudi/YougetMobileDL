@@ -15,6 +15,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_splash.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.await
 
 class SplashActivity : AppCompatActivity() {
@@ -30,14 +31,6 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_splash)
 
-        val size = splashBox.all.size
-
-        if (size == 0) {
-            Picasso.get().load(SPLASH_DEF_PHOTO).into(ivSplash)
-        } else {
-            Picasso.get().load(splashBox.all[(0 until size).shuffled().last()].pic).into(ivSplash)
-        }
-
         AppUtil.countDownCoroutines(
             total = 3,
             onFinish = {
@@ -50,6 +43,17 @@ class SplashActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val size = splashBox.all.size
+
+                withContext(Dispatchers.Main) {
+                    if (size == 0) {
+                        Picasso.get().load(SPLASH_DEF_PHOTO).into(ivSplash)
+                    } else {
+                        Picasso.get().load(splashBox.all[(0 until size).shuffled().last()].pic)
+                            .into(ivSplash)
+                    }
+                }
+
                 val splashInfo = apiService.getSplashPhoto().await()
                 if (splashInfo.isSuccess()) {
                     val splash = splashInfo.data
@@ -74,7 +78,6 @@ class SplashActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
         }
     }
 }

@@ -1,12 +1,8 @@
 package com.ilab.yougetmobiledl.ui.fragment
 
 import android.content.DialogInterface
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.FileProvider
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
 import com.ilab.yougetmobiledl.base.eventVM
@@ -45,26 +41,10 @@ class VideoDownloadedFragment :
                 (view.parent as SwipeMenuLayout).quickClose()
                 activity.remove(adapter.getItem(position) as DownloadedInfo)
             } else {
-                val intent = Intent(Intent.ACTION_VIEW)
                 val info = adapter.getItem(position) as DownloadedInfo
                 val file = File(info.path)
                 if (FileUtils.isFileExists(file)) {
-                    val uri: Uri
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        val contentUri = FileProvider.getUriForFile(
-                            requireContext(),
-                            requireActivity().packageName + ".FileProvider",
-                            file
-                        )
-                        intent.setDataAndType(contentUri, "video/*")
-                    } else {
-                        uri = Uri.fromFile(file)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        intent.setDataAndType(uri, "video/*")
-                    }
-
-                    startActivity(intent)
+                    activity.playMedia(file)
                 } else {
                     dialog = DialogUtils.createAlertDialog(
                         requireContext(), "未找到该视频文件", "是否删除该条记录",
