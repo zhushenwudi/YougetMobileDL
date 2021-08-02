@@ -1,6 +1,6 @@
 package com.ilab.yougetmobiledl.ui.fragment
 
-import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -8,13 +8,16 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
+import com.ilab.yougetmobiledl.base.Const.STORAGE_PERMISSION
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.VideoFragmentBinding
 import com.ilab.yougetmobiledl.ext.clickNoRepeat
 import com.ilab.yougetmobiledl.ext.interceptLongClick
 import com.ilab.yougetmobiledl.ext.requestPermission
 import com.ilab.yougetmobiledl.ui.activity.MainActivity
+import com.ilab.yougetmobiledl.ui.activity.WebActivity
 import com.ilab.yougetmobiledl.viewmodel.VideoViewModel
+import dev.utils.LogPrintUtils
 import kotlinx.android.synthetic.main.video_fragment.*
 
 class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
@@ -26,10 +29,19 @@ class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
         mDatabind?.vm = mViewModel
 
         val height = activity.statusBarHeight
+        LogPrintUtils.e("$height")
         mViewModel.statusBarHeight.value = height
 
         btnPermission.clickNoRepeat {
-            requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermission(STORAGE_PERMISSION)
+        }
+
+        ivTransform.clickNoRepeat {
+            if (eventVM.wifiConnected.value == true) {
+                startActivity(Intent(requireActivity(), WebActivity::class.java))
+            } else {
+                eventVM.globalToast.value = "请先打开 wifi"
+            }
         }
 
         viewpager2.adapter = object : FragmentStateAdapter(this) {
@@ -55,7 +67,7 @@ class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
 
         tabLayoutMediator.attach()
 
-        requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        requestPermission(STORAGE_PERMISSION)
     }
 
     override fun createObserver() {

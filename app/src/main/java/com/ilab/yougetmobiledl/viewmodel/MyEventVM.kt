@@ -1,7 +1,11 @@
 package com.ilab.yougetmobiledl.viewmodel
 
+import android.content.pm.PackageManager.PERMISSION_GRANTED
+import androidx.core.content.ContextCompat
 import com.ilab.yougetmobiledl.base.BaseViewModel
+import com.ilab.yougetmobiledl.base.Const.STORAGE_PERMISSION
 import com.ilab.yougetmobiledl.base.event.EventMutableLiveData
+import com.ilab.yougetmobiledl.ext.appContext
 import com.ilab.yougetmobiledl.model.DownloadInfo
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 
@@ -18,9 +22,12 @@ class MyEventVM : BaseViewModel() {
 
     val requestFailed = EventMutableLiveData<String>()
 
+    val wifiConnected = EventMutableLiveData<Boolean>()
+
     init {
         mutableDownloadTasks.value = mutableListOf()
         mutableDownloadedTasks.value = mutableListOf()
-        isGrantedPermission.value = false
+        isGrantedPermission.value =
+            ContextCompat.checkSelfPermission(appContext, STORAGE_PERMISSION) == PERMISSION_GRANTED
     }
 }

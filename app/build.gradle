@@ -4,6 +4,7 @@ plugins {
     id 'com.chaquo.python'
     id 'kotlin-android-extensions'
     id 'kotlin-kapt'
+    id 'com.yanzhenjie.andserver'
     id 'kotlin-noarg'
 }
 
@@ -91,7 +92,7 @@ dependencies {
     implementation 'io.github.afkt:DevAppX:2.2.8'
     implementation 'com.ftd.livepermissions:livepermissions:1.0.2'
     implementation 'io.github.youth5201314:banner:2.2.2'
-    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
     implementation "androidx.navigation:navigation-fragment-ktx:2.3.5"
     implementation "androidx.navigation:navigation-ui-ktx:2.3.5"
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:3.0.6'
@@ -108,6 +109,10 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
     implementation 'com.github.mcxtzhang:SwipeDelMenuLayout:V1.3.0'
     implementation 'com.github.cyynf:MarqueeView:2.1.0'
+    implementation 'com.yanzhenjie.andserver:api:2.1.9'
+    kapt 'com.yanzhenjie.andserver:processor:2.1.9'
+    implementation 'javax.activation:javax.activation-api:1.2.0'
+    implementation 'com.github.xuxinjiang:NetworkCue:1.0.2'
 }
 
 apply plugin: 'io.objectbox'

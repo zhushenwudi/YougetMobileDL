@@ -1,4 +1,4 @@
-package com.ilab.yougetmobiledl.base
+package com.ilab.yougetmobiledl.ext
 
 import java.util.concurrent.ConcurrentHashMap
 

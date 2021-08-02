@@ -1,14 +1,19 @@
 package com.ilab.yougetmobiledl.base
 
 import android.content.Context
+import android.widget.Toast
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.chaquo.python.android.PyApplication
 import com.heima.easysp.SharedPreferencesUtils
 import com.ilab.yougetmobiledl.BuildConfig
+import com.ilab.yougetmobiledl.ext.appContext
 import com.ilab.yougetmobiledl.model.MyObjectBox
 import com.ilab.yougetmobiledl.viewmodel.MyEventVM
+import com.skl.networkmonitor.NetType
+import com.skl.networkmonitor.NetworkLiveData
 import dev.DevUtils
 import dev.utils.LogPrintUtils
 import io.objectbox.BoxStore
@@ -41,6 +46,29 @@ class App : PyApplication(), ViewModelStoreOwner {
         boxStore.startObjectBrowser(8090)
 
         LogPrintUtils.setPrintLog(BuildConfig.DEBUG)
+
+        ProcessLifecycleOwner.get().run {
+            eventVM.globalToast.observe(this) {
+                Toast.makeText(appContext, it, Toast.LENGTH_SHORT).show()
+                LogPrintUtils.e(it)
+            }
+
+            NetworkLiveData.get(appContext).observe(this) {
+                when (it.ordinal) {
+                    NetType.WIFI.ordinal -> {
+                        eventVM.wifiConnected.value = true
+                    }
+                    NetType.NET_2G.ordinal,
+                    NetType.NET_3G.ordinal,
+                    NetType.NET_4G.ordinal -> {
+                        eventVM.wifiConnected.value = false
+                    }
+                    NetType.NOME.ordinal -> {
+                        eventVM.wifiConnected.value = false
+                    }
+                }
+            }
+        }
     }
 
     private fun getAppViewModelProvider(): ViewModelProvider {

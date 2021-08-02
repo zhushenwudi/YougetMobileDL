@@ -33,7 +33,7 @@ class DownloadService : LifecycleService(), CoroutineScope by MainScope() {
         NotificationChannel(
             ID,
             NAME,
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_LOW
         )
     }
 

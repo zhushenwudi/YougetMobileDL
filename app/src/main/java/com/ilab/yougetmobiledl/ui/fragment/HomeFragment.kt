@@ -1,11 +1,11 @@
 package com.ilab.yougetmobiledl.ui.fragment
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.os.Bundle
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseFragment
+import com.ilab.yougetmobiledl.base.Const.STORAGE_PERMISSION
 import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.HomeFragmentBinding
 import com.ilab.yougetmobiledl.ext.clickNoRepeat
@@ -55,7 +55,7 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
 
         btnDownload.clickNoRepeat {
             requestPermission(
-                permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                permission = STORAGE_PERMISSION,
                 onGrant = {
                     etUrl.text.toString().trim().let { et ->
                         if (et.isNotEmpty() && !AppUtil.isUrl(et)) {
