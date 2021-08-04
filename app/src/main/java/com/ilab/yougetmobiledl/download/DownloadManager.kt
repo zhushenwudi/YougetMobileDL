@@ -4,7 +4,6 @@ package com.ilab.yougetmobiledl.download
  * 下载器管理类
  */
 
-import com.ilab.yougetmobiledl.db.DBController
 import com.ilab.yougetmobiledl.model.DownloadInfo
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 
@@ -81,6 +80,4 @@ interface DownloadManager {
      * 获取上一次关闭程序前准备下载和正在下载的任务
      */
     fun getLatestDownloadTasks(): List<DownloadInfo>
-
-    fun getDBController(): DBController
 }

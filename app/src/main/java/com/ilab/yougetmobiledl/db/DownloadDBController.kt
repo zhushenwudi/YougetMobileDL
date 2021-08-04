@@ -24,6 +24,11 @@ interface DownloadDBController {
     fun findDownloadedInfoById(id: Long): DownloadedInfo?
 
     /**
+     * 根据 绝对路径 获取 已下载 信息
+     */
+    fun findDownloadedInfoByPath(path: String): DownloadedInfo?
+
+    /**
      * 根据 id 获取 下载中 信息
      */
     fun findDownloadInfoById(id: Long): DownloadInfo?

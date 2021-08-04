@@ -64,7 +64,6 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                         }
                         if (et.isEmpty()) {
                             ToastUtils.showLong("请先输入媒体网路地址")
-//                            mViewModel.handleURL("https://b23.tv/VkWj3j")
 //                            mViewModel.handleURL("https://www.bilibili.com/video/av170001")
 //                            mViewModel.handleURL("https://www.bilibili.com/video/BV1GV411p7P9")
 //                            mViewModel.handleURL("https://www.bilibili.com/bangumi/play/ss38931")
@@ -124,7 +123,7 @@ class HomeFragment : BaseFragment<HomeViewModel, HomeFragmentBinding>() {
                         loading.refreshDetailLabel("需要大会员才能下载")
                     }
                     HomeViewModel.Status.NOT_SUPPORT -> {
-                        loading.refreshDetailLabel("该视频暂不支持下载")
+                        loading.refreshDetailLabel("该链接暂不支持下载")
                     }
                     else -> {
                         loading.dismiss()

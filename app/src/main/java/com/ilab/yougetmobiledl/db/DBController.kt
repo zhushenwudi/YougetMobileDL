@@ -6,7 +6,7 @@ import com.ilab.yougetmobiledl.model.DownloadInfo_
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.model.DownloadedInfo_
 
-class DBController : DownloadDBController {
+object DBController : DownloadDBController {
     private val downloadBox = App.boxStore.boxFor(DownloadInfo::class.java)
     private val downloadedBox = App.boxStore.boxFor(DownloadedInfo::class.java)
 
@@ -20,6 +20,10 @@ class DBController : DownloadDBController {
 
     override fun findDownloadedInfoById(id: Long): DownloadedInfo? {
         return downloadedBox.query().equal(DownloadedInfo_.id, id).build().findFirst()
+    }
+
+    override fun findDownloadedInfoByPath(path: String): DownloadedInfo? {
+        return downloadedBox.query().equal(DownloadedInfo_.path, path).build().findFirst()
     }
 
     override fun findDownloadInfoById(id: Long): DownloadInfo? {

@@ -15,7 +15,7 @@ data class DownloadedInfo(
 
     var name: String = "",
     var path: String = "",
-    val totalSize: String = "",
+    var totalSize: String = "",
     var photo: String = "",
     var url: String = "",
     var type: Int = 1, // 1: 视频 2: 音频

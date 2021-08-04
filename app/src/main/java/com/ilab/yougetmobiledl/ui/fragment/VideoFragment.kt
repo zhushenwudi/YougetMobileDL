@@ -14,23 +14,16 @@ import com.ilab.yougetmobiledl.databinding.VideoFragmentBinding
 import com.ilab.yougetmobiledl.ext.clickNoRepeat
 import com.ilab.yougetmobiledl.ext.interceptLongClick
 import com.ilab.yougetmobiledl.ext.requestPermission
-import com.ilab.yougetmobiledl.ui.activity.MainActivity
 import com.ilab.yougetmobiledl.ui.activity.WebActivity
 import com.ilab.yougetmobiledl.viewmodel.VideoViewModel
-import dev.utils.LogPrintUtils
 import kotlinx.android.synthetic.main.video_fragment.*
 
 class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
-    private val activity by lazy { requireActivity() as MainActivity }
 
     override fun layoutId() = R.layout.video_fragment
 
     override fun initView(savedInstanceState: Bundle?) {
         mDatabind?.vm = mViewModel
-
-        val height = activity.statusBarHeight
-        LogPrintUtils.e("$height")
-        mViewModel.statusBarHeight.value = height
 
         btnPermission.clickNoRepeat {
             requestPermission(STORAGE_PERMISSION)

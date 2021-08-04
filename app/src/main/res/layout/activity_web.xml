@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keepScreenOn="true">
 
     <data>
 
@@ -21,12 +22,12 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_height='@{vm.statusBarHeight}' />
+            app:layout_height='@{vm.statusBarHeight == 0 ? 1 : vm.statusBarHeight}' />
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="60dp"
             android:background="@color/sky_blue"
             android:gravity="center"
             android:text="WIFI传输"

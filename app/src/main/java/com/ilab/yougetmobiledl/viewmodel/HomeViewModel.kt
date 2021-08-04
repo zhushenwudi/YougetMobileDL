@@ -122,6 +122,9 @@ class HomeViewModel : BaseViewModel() {
                     )
                 }
             }
+            else -> {
+                postEvent(Status.NOT_SUPPORT)
+            }
         }
         LogPrintUtils.e(url)
     }

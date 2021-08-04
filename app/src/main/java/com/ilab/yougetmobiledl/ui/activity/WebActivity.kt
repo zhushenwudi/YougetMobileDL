@@ -10,9 +10,7 @@ import com.ilab.yougetmobiledl.databinding.ActivityWebBinding
 import com.ilab.yougetmobiledl.ext.clickNoRepeat
 import com.ilab.yougetmobiledl.service.WebServer
 import com.ilab.yougetmobiledl.viewmodel.WebViewModel
-import dev.utils.LogPrintUtils
 import dev.utils.app.NetWorkUtils
-import dev.utils.app.ScreenUtils.getStatusBarHeight
 import kotlinx.android.synthetic.main.activity_web.*
 
 class WebActivity : BaseActivity<WebViewModel, ActivityWebBinding>() {
@@ -23,7 +21,6 @@ class WebActivity : BaseActivity<WebViewModel, ActivityWebBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         mDatabind?.vm = mViewModel
-        mViewModel.statusBarHeight.value = getStatusBarHeight()
 
         Glide.with(this).asGif().load(R.drawable.gif_transform).into(ivGif)
 
@@ -42,7 +39,6 @@ class WebActivity : BaseActivity<WebViewModel, ActivityWebBinding>() {
 
     override fun createObserver() {
         eventVM.wifiConnected.observe(this) {
-            LogPrintUtils.e("$it")
             if (!it) {
                 forceCloseWeb()
             }

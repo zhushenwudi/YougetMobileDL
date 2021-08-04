@@ -1,9 +1,12 @@
 package com.ilab.yougetmobiledl.base
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ilab.yougetmobiledl.base.event.EventMutableLiveData
 
 open class BaseViewModel : ViewModel() {
+    val statusBarHeight = MutableLiveData<Int>()
+
     val loadingChange: UiLoadingChange by lazy { UiLoadingChange() }
 
     /**

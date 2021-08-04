@@ -19,12 +19,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 object DownloadManagerImpl : DownloadManager {
-
-    private val dbController = DBController()
     private val latestDownloadTask = mutableListOf<DownloadInfo>()
 
     init {
-        val downloadList = dbController.findAllDownloading().toMutableList()
+        val downloadList = DBController.findAllDownloading().toMutableList()
         downloadList.forEach {
             if (it.status == STATUS_PREPARE_DOWNLOAD || it.status == STATUS_DOWNLOADING) {
                 latestDownloadTask.add(it)
@@ -33,14 +31,14 @@ object DownloadManagerImpl : DownloadManager {
         }
         eventVM.mutableDownloadTasks.postValue(downloadList)
 
-        val downloadedList = dbController.findAllDownloaded().toMutableList()
+        val downloadedList = DBController.findAllDownloaded().toMutableList()
         eventVM.mutableDownloadedTasks.postValue(downloadedList)
     }
 
     override fun add(downloadInfo: DownloadInfo): DownloadInfo {
         downloadInfo.status = STATUS_PREPARE_DOWNLOAD
         // 写入数据库
-        downloadInfo.id = dbController.createOrUpdate(downloadInfo)
+        downloadInfo.id = DBController.createOrUpdate(downloadInfo)
         changeAddUI(downloadInfo)
         return downloadInfo
     }
@@ -51,9 +49,9 @@ object DownloadManagerImpl : DownloadManager {
     ): Pair<Boolean, String?> = suspendCancellableCoroutine { continuation ->
         downloadInfo.status = STATUS_DOWNLOADING
         // 写入数据库
-        dbController.createOrUpdate(downloadInfo)
+        DBController.createOrUpdate(downloadInfo)
         // 创建下载任务
-        val downloadTask = DownloadTaskImpl(downloadInfo, dbController) {
+        val downloadTask = DownloadTaskImpl(downloadInfo) {
             continuation.resume(it)
         }
         // 更新视图
@@ -67,9 +65,9 @@ object DownloadManagerImpl : DownloadManager {
     ): Pair<Boolean, String?> = suspendCancellableCoroutine { continuation ->
         downloadInfo.status = STATUS_CONVERT
         // 更新数据库
-        dbController.createOrUpdate(downloadInfo)
+        DBController.createOrUpdate(downloadInfo)
         // 创建下载任务
-        val downloadTask = DownloadTaskImpl(downloadInfo, dbController) {
+        val downloadTask = DownloadTaskImpl(downloadInfo) {
             continuation.resume(it)
         }
         // 更新视图
@@ -84,7 +82,7 @@ object DownloadManagerImpl : DownloadManager {
         }
         downloadInfo.status = STATUS_NONE
         // 更新数据库
-        dbController.createOrUpdate(downloadInfo)
+        DBController.createOrUpdate(downloadInfo)
         // 更新视图
         changeStatusUI(downloadInfo.id, STATUS_NONE)
         return true
@@ -98,7 +96,7 @@ object DownloadManagerImpl : DownloadManager {
             }
             it.status = STATUS_NONE
             // 更新数据库
-            dbController.createOrUpdate(it)
+            DBController.createOrUpdate(it)
             changeStatusUI(it.id, STATUS_NONE)
         }
     }
@@ -109,7 +107,7 @@ object DownloadManagerImpl : DownloadManager {
             downloadInfo.status = STATUS_PREPARE_DOWNLOAD
         }
         // 更新数据库
-        downloadInfo.id = dbController.createOrUpdate(downloadInfo)
+        downloadInfo.id = DBController.createOrUpdate(downloadInfo)
         downloadInfo.percent = 0
         // 更新视图
         changeStatusUI(downloadInfo.id, STATUS_PREPARE_DOWNLOAD)
@@ -121,7 +119,7 @@ object DownloadManagerImpl : DownloadManager {
         downloadList?.forEach {
             it.status = STATUS_PREPARE_DOWNLOAD
             // 更新数据库
-            dbController.createOrUpdate(it)
+            DBController.createOrUpdate(it)
             // 更新视图
             changeStatusUI(it.id, STATUS_PREPARE_DOWNLOAD)
         }
@@ -129,7 +127,7 @@ object DownloadManagerImpl : DownloadManager {
 
     override fun remove(downloadInfo: DownloadInfo) {
         // 删除数据库
-        val isSuccess = dbController.delete(downloadInfo)
+        val isSuccess = DBController.delete(downloadInfo)
         if (isSuccess) {
             // 更新视图
             val tempList = eventVM.mutableDownloadTasks.value
@@ -145,27 +143,29 @@ object DownloadManagerImpl : DownloadManager {
             eventVM.mutableDownloadTasks.postValue(tempList)
             // 清理文件
             AppUtil.getSDCardPath()?.let {
-                val files = FileUtils.listFilesInDir(it)
-                files.forEach { f ->
-                    if (f.absolutePath.contains(downloadInfo.name)) {
-                        FileUtils.deleteFile(f)
-                    }
-                }
+                // 删除 mp4.download 缓存文件
+                FileUtils.listFilesInDir(it)
+                    .filter { f -> f.absolutePath.contains(downloadInfo.name) }
+                    .forEach { f -> FileUtils.deleteFile(f) }
             }
         }
     }
 
     override fun remove(downloadedInfo: DownloadedInfo) {
         // 删除数据库
-        val isSuccess = dbController.delete(downloadedInfo)
+        val isSuccess = DBController.delete(downloadedInfo)
         if (isSuccess) {
             // 清理文件
             AppUtil.getSDCardPath()?.let {
-                val files = FileUtils.listFilesInDir(it)
-                files.forEach { f ->
-                    if (f.absolutePath.contains(downloadedInfo.name)) {
-                        FileUtils.deleteFile(f)
-                    }
+                // 删除 mp4 文件
+                FileUtils.listFilesInDir(it)
+                    .filter { f -> f.absolutePath == downloadedInfo.path }
+                    .forEach { f -> FileUtils.deleteFile(f) }
+                // 如果封面是截图生成的，需要删除 png 文件
+                if (downloadedInfo.photo.startsWith("file://")) {
+                    FileUtils.listFilesInDir("${it}/temp")
+                        .filter { f -> f.absolutePath == downloadedInfo.name + ".png" }
+                        .forEach { f -> FileUtils.deleteFile(f) }
                 }
             }
             // 更新视图
@@ -190,7 +190,7 @@ object DownloadManagerImpl : DownloadManager {
                 it.percent = 100
                 it.speed = "0 kB/s"
                 it.status = STATUS_CONVERT
-                dbController.createOrUpdate(it)
+                DBController.createOrUpdate(it)
                 return@forEach
             }
         }
@@ -202,22 +202,18 @@ object DownloadManagerImpl : DownloadManager {
         tempList?.forEach {
             if (it.id == downloadInfo.id) {
                 it.status = STATUS_ERROR
-                dbController.createOrUpdate(it)
+                DBController.createOrUpdate(it)
             }
         }
         eventVM.mutableDownloadTasks.postValue(tempList)
     }
 
     override fun findAllDownloading(): List<DownloadInfo> {
-        return dbController.findAllDownloading()
+        return DBController.findAllDownloading()
     }
 
     override fun findAllDownloaded(): List<DownloadedInfo> {
-        return dbController.findAllDownloaded()
-    }
-
-    override fun getDBController(): DBController {
-        return dbController
+        return DBController.findAllDownloaded()
     }
 
     override fun getLatestDownloadTasks(): MutableList<DownloadInfo> {

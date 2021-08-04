@@ -8,6 +8,8 @@ import com.google.gson.reflect.TypeToken
 import dev.utils.LogPrintUtils
 import dev.utils.app.PathUtils
 import dev.utils.app.ResourceUtils.getContentResolver
+import dev.utils.app.image.BitmapUtils
+import dev.utils.app.image.ImageUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
@@ -162,5 +164,16 @@ object AppUtil {
             result[strSplit[0]] = strSplit[1]
         }
         return result
+    }
+
+    /**
+     * 获取封面
+     */
+    fun createCover(path: String, name: String): String {
+        val bitmap = BitmapUtils.getVideoThumbnail(path)
+        val coverPath = "${getSDCardPath()}/temp/${name}.png"
+        ImageUtils.saveBitmapToSDCardPNG(bitmap, coverPath)
+        bitmap.recycle()
+        return coverPath
     }
 }

@@ -113,6 +113,7 @@ dependencies {
     kapt 'com.yanzhenjie.andserver:processor:2.1.9'
     implementation 'javax.activation:javax.activation-api:1.2.0'
     implementation 'com.github.xuxinjiang:NetworkCue:1.0.2'
+    implementation 'io.github.wcl9900:NotchFit:1.5'
 }
 
 apply plugin: 'io.objectbox'

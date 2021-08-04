@@ -10,8 +10,6 @@ import com.ilab.yougetmobiledl.model.DownloadInfo.Companion.STATUS_CONVERT_FAIL
 import com.ilab.yougetmobiledl.model.DownloadedInfo
 import com.ilab.yougetmobiledl.utils.AppUtil
 import dev.utils.app.ShellUtils
-import dev.utils.app.image.BitmapUtils
-import dev.utils.app.image.ImageUtils
 import dev.utils.common.FileUtils
 import kotlinx.coroutines.*
 import kotlin.math.round
@@ -22,7 +20,6 @@ import kotlin.math.round
 
 class DownloadTaskImpl(
     private val downloadInfo: DownloadInfo,
-    private val dbController: DBController,
     private val resultResult: (res: Pair<Boolean, String?>) -> Unit
 ) : DownloadTask {
 
@@ -58,22 +55,25 @@ class DownloadTaskImpl(
                         if (res == "finish") {
                             manager.downloadSuccess(downloadInfo)
                             when (downloadInfo.type) {
+                                0 -> {
+                                    // 导入视频 获取封面
+                                    val coverPath =
+                                        AppUtil.createCover(downloadInfo.path, downloadInfo.name)
+                                    generateDownloadedInfo("file://$coverPath")
+                                }
                                 1 -> {
                                     // B站视频 flv -> mp4
                                     convert()
                                 }
                                 2 -> {
-                                    // B站音频默认生成的mp4，直接生成已下载实例
+                                    // B站音频 默认生成的mp4，直接生成已下载实例
                                     generateDownloadedInfo()
                                 }
                                 3 -> {
-                                    // 优酷视频获取封面
-                                    val bitmap = BitmapUtils.getVideoThumbnail(downloadInfo.path)
-                                    val photo =
-                                        "${AppUtil.getSDCardPath()}/temp/${downloadInfo.name}.png"
-                                    ImageUtils.saveBitmapToSDCardPNG(bitmap, photo)
-                                    bitmap.recycle()
-                                    generateDownloadedInfo("file://$photo")
+                                    // 优酷视频 获取封面
+                                    val coverPath =
+                                        AppUtil.createCover(downloadInfo.path, downloadInfo.name)
+                                    generateDownloadedInfo("file://$coverPath")
                                 }
                             }
                         } else {
@@ -110,9 +110,9 @@ class DownloadTaskImpl(
                 if (current.url == downloadInfo.url) {
                     iterator.remove()
                     // 从 下载中 数据库删除
-                    dbController.delete(current)
+                    DBController.delete(current)
                     // 写入 已下载 数据库
-                    dbController.createOrUpdate(info)
+                    DBController.createOrUpdate(info)
                     val downloadedList = eventVM.mutableDownloadedTasks.value
                     downloadedList?.add(info)
                     eventVM.mutableDownloadedTasks.postValue(downloadedList)
@@ -183,7 +183,7 @@ class DownloadTaskImpl(
                                 info.speed = "0 kB/s"
                                 info.status = STATUS_CONVERT_FAIL
                                 eventVM.mutableDownloadTasks.postValue(downloadList)
-                                dbController.createOrUpdate(info)
+                                DBController.createOrUpdate(info)
                                 return@forEach
                             }
                         }
