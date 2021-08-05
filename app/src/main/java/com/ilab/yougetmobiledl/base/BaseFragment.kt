@@ -6,10 +6,10 @@ import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import java.lang.reflect.ParameterizedType
@@ -23,7 +23,7 @@ abstract class BaseFragment<VM : BaseViewModel, DB : ViewDataBinding> : Fragment
 
     var mDatabind: DB? = null
 
-    lateinit var mActivity: AppCompatActivity
+    lateinit var mActivity: FragmentActivity
 
     abstract fun layoutId(): Int
 
@@ -39,7 +39,7 @@ abstract class BaseFragment<VM : BaseViewModel, DB : ViewDataBinding> : Fragment
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        mActivity = context as AppCompatActivity
+        mActivity = context as FragmentActivity
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

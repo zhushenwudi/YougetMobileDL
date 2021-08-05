@@ -1,12 +1,12 @@
 package com.ilab.yougetmobiledl.base
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 
-abstract class BaseActivity<VM : BaseViewModel, DB : ViewDataBinding> : AppCompatActivity() {
+abstract class BaseActivity<VM : BaseViewModel, DB : ViewDataBinding> : FragmentActivity() {
 
     lateinit var mViewModel: VM
 
@@ -28,7 +28,6 @@ abstract class BaseActivity<VM : BaseViewModel, DB : ViewDataBinding> : AppCompa
         registerUiChange()
         initView(savedInstanceState)
         createObserver()
-        // TODO:监听网络
     }
 
     /**

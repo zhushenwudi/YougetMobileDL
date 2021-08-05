@@ -24,16 +24,6 @@ class SplashActivity : BaseActivity<BaseViewModel, ActivitySplashBinding>() {
     override fun layoutId() = R.layout.activity_splash
 
     override fun initView(savedInstanceState: Bundle?) {
-        AppUtil.countDownCoroutines(
-            total = 3,
-            onFinish = {
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-            },
-            scope = lifecycleScope
-        )
-
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val size = splashBox.all.size
@@ -75,6 +65,16 @@ class SplashActivity : BaseActivity<BaseViewModel, ActivitySplashBinding>() {
                 e.printStackTrace()
             }
         }
+
+        AppUtil.countDownCoroutines(
+            total = 1,
+            onFinish = {
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            },
+            scope = lifecycleScope
+        )
     }
 
     override fun createObserver() {}

@@ -3,6 +3,7 @@ package com.ilab.yougetmobiledl.ui.fragment
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
@@ -16,6 +17,8 @@ import com.ilab.yougetmobiledl.ext.interceptLongClick
 import com.ilab.yougetmobiledl.ext.requestPermission
 import com.ilab.yougetmobiledl.ui.activity.WebActivity
 import com.ilab.yougetmobiledl.viewmodel.VideoViewModel
+import com.wcl.notchfit.NotchFit
+import com.wcl.notchfit.args.NotchScreenType
 import kotlinx.android.synthetic.main.video_fragment.*
 
 class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
@@ -24,6 +27,16 @@ class VideoFragment : BaseFragment<VideoViewModel, VideoFragmentBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         mDatabind?.vm = mViewModel
+
+        NotchFit.fit(
+            requireActivity(), NotchScreenType.FULL_SCREEN
+        ) { notchProperty ->
+            if (notchProperty.isNotchEnable) {
+                val marginLayoutParams = clLayout.layoutParams as ViewGroup.MarginLayoutParams
+                marginLayoutParams.topMargin = notchProperty.notchHeight
+                clLayout.requestLayout()
+            }
+        }
 
         btnPermission.clickNoRepeat {
             requestPermission(STORAGE_PERMISSION)

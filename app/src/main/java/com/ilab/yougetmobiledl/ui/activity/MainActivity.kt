@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import androidx.core.content.FileProvider
 import androidx.navigation.NavGraph
 import androidx.navigation.NavGraphNavigator
@@ -25,8 +24,6 @@ import com.ilab.yougetmobiledl.ui.fragment.HomeFragment
 import com.ilab.yougetmobiledl.ui.fragment.VideoFragment
 import com.ilab.yougetmobiledl.utils.*
 import com.ilab.yougetmobiledl.viewmodel.MainViewModel
-import com.wcl.notchfit.NotchFit
-import com.wcl.notchfit.args.NotchScreenType
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 
@@ -38,11 +35,6 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>() {
     override fun layoutId() = R.layout.activity_main
 
     override fun initView(savedInstanceState: Bundle?) {
-
-        NotchFit.fit(this, NotchScreenType.FULL_SCREEN) {
-            Log.e("aaa", "${it.notchHeight}")
-            mViewModel.statusBarHeight.value = it.notchHeight
-        }
 
         // 屏蔽长按点击
         bottomNavigationView.interceptLongClick(R.id.home_fragment, R.id.video_fragment)
