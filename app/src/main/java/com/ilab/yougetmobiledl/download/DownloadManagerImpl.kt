@@ -162,9 +162,9 @@ object DownloadManagerImpl : DownloadManager {
                     .filter { f -> f.absolutePath == downloadedInfo.path }
                     .forEach { f -> FileUtils.deleteFile(f) }
                 // 如果封面是截图生成的，需要删除 png 文件
-                if (downloadedInfo.photo.startsWith("file://")) {
-                    FileUtils.listFilesInDir("${it}/temp")
-                        .filter { f -> f.absolutePath == downloadedInfo.name + ".png" }
+                if (!downloadedInfo.photo.startsWith("http")) {
+                    FileUtils.listFilesInDir("${it}/temp/")
+                        .filter { f -> f.absolutePath.contains(downloadedInfo.name + ".png") }
                         .forEach { f -> FileUtils.deleteFile(f) }
                 }
             }
