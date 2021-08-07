@@ -102,13 +102,12 @@ object DownloadManagerImpl : DownloadManager {
     }
 
     override fun resume(downloadInfo: DownloadInfo): DownloadInfo {
-        if (downloadInfo.status == STATUS_NONE) {
-            // 未开始 -> 等待中
+        if (downloadInfo.status == STATUS_NONE || downloadInfo.status == STATUS_PREPARE_DOWNLOAD) {
+            // 未开始、下载失败 -> 等待中
             downloadInfo.status = STATUS_PREPARE_DOWNLOAD
         }
         // 更新数据库
         downloadInfo.id = DBController.createOrUpdate(downloadInfo)
-        downloadInfo.percent = 0
         // 更新视图
         changeStatusUI(downloadInfo.id, STATUS_PREPARE_DOWNLOAD)
         return downloadInfo

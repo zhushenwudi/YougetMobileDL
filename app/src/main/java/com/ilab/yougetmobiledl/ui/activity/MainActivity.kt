@@ -14,6 +14,7 @@ import androidx.navigation.NavigatorProvider
 import androidx.navigation.ui.NavigationUI
 import com.ilab.yougetmobiledl.R
 import com.ilab.yougetmobiledl.base.BaseActivity
+import com.ilab.yougetmobiledl.base.eventVM
 import com.ilab.yougetmobiledl.databinding.ActivityMainBinding
 import com.ilab.yougetmobiledl.ext.exit
 import com.ilab.yougetmobiledl.ext.interceptLongClick
@@ -56,7 +57,14 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>() {
         startService()
     }
 
-    override fun createObserver() {}
+    override fun createObserver() {
+        eventVM.wifiConnected.observe(this) {
+            if (!it) {
+                eventVM.globalToast.value = "您处于非 wifi 环境，已暂停全部等待中的任务"
+                pauseAll()
+            }
+        }
+    }
 
     private fun initNavGraph(
         provider: NavigatorProvider,
@@ -133,7 +141,7 @@ class MainActivity : BaseActivity<MainViewModel, ActivityMainBinding>() {
         startService()
     }
 
-    fun pauseAll() {
+    private fun pauseAll() {
         mIntent.putExtra("msg", DownloadService.Event.PAUSE_ALL)
         startService()
     }
